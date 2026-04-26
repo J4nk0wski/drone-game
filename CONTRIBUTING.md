@@ -1,4 +1,4 @@
-# Contributing to Drone Game
+# Contributing
 
 ## Branches
 - `main` — stabilne buildy, nie pushujemy bezpośrednio
