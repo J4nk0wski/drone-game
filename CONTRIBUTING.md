@@ -6,8 +6,8 @@
 - `feature/nazwa-zadania` — tutaj pracujemy na co dzień
 
 - ## Nazewnictwo branchy
+przykłady:
 - feature/drone-physics
-- feature/player1-controls
 - fix/obstacle-collision
 
 ## Pull Requesty
