@@ -6,9 +6,9 @@
 - `feature/nazwa-zadania` — tutaj pracujemy na co dzień
 
 - ## Nazewnictwo branchy
--feature/drone-physics
--feature/player1-controls
--fix/obstacle-collision
+- feature/drone-physics
+- feature/player1-controls
+- fix/obstacle-collision
 
 ## Pull Requesty
 - Każdy PR powinien być zatwierdzony przez minimum 1 osobę
