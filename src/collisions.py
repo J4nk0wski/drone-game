@@ -18,7 +18,7 @@ Numeracja:
 - TOP - 3
 - BOTTOM - 4
 """
-class CollisioSide(Enum):
+class CollisionSide(Enum):
     NONE = auto()
     LEFT = auto()
     RIGHT = auto()
@@ -86,6 +86,9 @@ class GameObject:
     object_type: ObjectType
 
     @property
+    def rect(self): return pygame.Rect(self.x, self.y, self.width, self.height)
+
+    @property
     def left(self):
         return self.x
     
@@ -124,99 +127,84 @@ Atrybuty:
 - object_type - rodzaj obiektu w grze (Enum)
 - destroyed - zmienna określająca czy obiekt jest zniszczony (bool)
 - angle - przechylenie drona (początkowo 0)
-- position - przechowuje pozycję obiektu w dwóch wymiarach (Vector2)
 - velocity - prędkości w kierynkach poziomym i pionowym wyrażone jako wektor (Vector2)
 - gravity - wartość grawitacji drona
 - front_rotor_force - siła przedniego rotora (początkowo 0)
 - back_rotor_force - siła tylniego rotora (początkowo 0) 
 - score - zdobyte punkty (początkowo 0)
-
+- rect - Rect drona
+- img - grafika drona
 """
 class Drone(GameObject):
-    STABILIZATION = 0.95
 
-    def __init__(self, x: float, y: float, width: float=60, height: float=40, file_dir: str=None):
+    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40):
         super().__init__(x, y, width, height, ObjectType.DRONE)
         self.destroyed: bool = False
         self.angle: float = 0
-        self.position: Vector2 = Vector2(x, y)
         self.velocity: Vector2 = Vector2(0, 0)
         self.gravity: float = 0
         self.front_rotor_force: float = 0
         self.back_rotor_force: float = 0
         self.score: int = 0
-        try:
-            self.image: pygame.image = pygame.image.load(file_dir)
-        except:
-            self.image: pygame.image = None
+        self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.img: pygame.image = None
 
-    def update(self, dt: float):
-        if self.destroyed: 
+    def create_image(self, file_dir: str=None, width: float=None, height: float=None):
+        if width == None:
+            width = self.width
+        else:
+            self.width = width
+
+        if height == None:
+            height = self.height
+        else:
+            self.height = height
+
+        if file_dir == None:
+            self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
             return
-        
-        self.angle += (self.front_rotor_force - self.back_rotor_force) * (1 - self.STABILIZATION)
-        self.angle *= self.STABILIZATION
 
-        total_lift = self.front_rotor_force + self.back_rotor_force
-
-        rad = math.radians(self.angle)
-        accel_x = total_lift * math.sin(rad) * 2.0
-        accel_y = self.gravity - (total_lift * math.cos(rad))
-
-        self.velocity.x += accel_x * dt
-        self.velocity.y += accel_y * dt
-        
-        self.velocity.x *= 0.99
-        self.velocity.y *= 0.99
-
-        self.x += self.velocity.x * dt
-        self.y += self.velocity.y * dt
-
+        original_img = pygame.image.load(file_dir)
+        scaled_img = pygame.transform.scale(original_img,(width, height))
+        self.img = scaled_img
+        self.rect = scaled_img.get_rect()
 
 """
-klasa przechowuje dane kolizji
+klasa przechowuje dane kolizji obiektu dynamicznego ze statycznym
+dla klasy drona lub jego pochodnej zwraca dodatkowo prędkość jako pole klasy CollisionInfo
 
 Atrybuty:
-- collision - czy wystąpiła kolizja (bool)
-- obj - obiekt z jakim wystąpiła kolizja (pygame.Rect)
-- side - strona którą obiekt główny, np. dron uderzył w przeszkodę (str:("right", "left", "top", "bottom"))
-- vx - prędkość pozioma uderzenia
-- vy - prędkość pionowa uderzenia
-
-danych obiektu klasy CollisionInfo nie można zmienić (konwencja)
+- collision - czy nastąpiła kolizja (bool)
+- side - strona kolizji (CollisionSide)
+- object_hit - przeszkoda z którą zderzył się główny obiekt (GameObject)
+- velocity - prędkości głównego obiektu podczas zderzenia (Vector2)
 """
+@dataclass
 class CollisionInfo:
-    def __init__(self, collision: bool=False, obj: pygame.Rect=None, side=None, vx=0, vy=0):
-        self._collision = collision
-        self._obj = obj
-        self._side = side
-        self._vx = vx
-        self._vy = vy
+    collision: bool
+    side: CollisionSide
+    object_hit: Optional[GameObject]
+    velocity: Optional[Vector2]
 
-    @property
-    def collision(self):
-        return self._collision
-    
-    @property
-    def obj(self):
-        return self._obj
-    
-    @property
-    def side(self):
-        return self._side
-    
-    @property
-    def vx(self):
-        return self._vx
-    
-    @property
-    def vy(self):
-        return self._vy
-    
-def check_collision(main_obj: pygame.Rect, obstacle: pygame.Rect) -> CollisionInfo:
+"""
 
-    if not main_obj.colliderect(obstacle):
-        return CollisionInfo(obj=obstacle)
+"""
+def check_collision(dynamic: GameObject, static: GameObject) -> CollisionInfo:
+    if not dynamic.rect.colliderect(static.rect):
+        return CollisionInfo(False, CollisionSide.NONE, None, None)
+
+    d_rect = dynamic.rect
+    s_rect = static.rect
     
+    overlaps = {
+        CollisionSide.TOP: d_rect.bottom - s_rect.top,
+        CollisionSide.BOTTOM: s_rect.bottom - d_rect.top,
+        CollisionSide.LEFT: d_rect.right - s_rect.left,
+        CollisionSide.RIGHT: s_rect.right - d_rect.left,
+    }
+    side = min(overlaps, key=overlaps.get)
+    if isinstance(dynamic, Drone):
+        return CollisionInfo(True, side, static, dynamic.velocity)
+    return CollisionInfo(True, side, static)
 
 
