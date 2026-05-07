@@ -1,17 +1,17 @@
-import pygame-ce
+import pygame
 # Tu importy
-
+from src.window import Window
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Drone Game")
+    game_window = Window(size=(1280, 720), game_name="Drone Game")
     clock = pygame.time.Clock()
     running = True
 
     while running:
-        # Tu będzie obsługa zdarzeń
-        pass
-
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        game_window.render()
     pygame.quit()
 
 if __name__ == "__main__":
