@@ -26,7 +26,22 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                # Sterowanie
+        keys = pygame.key.get_pressed()
 
+        # Ciąg w górę (strzałka w górę)
+        if keys[pygame.K_UP]:
+            # Dodajemy ciąg silników (przeciwdziała grawitacji)
+            player_drone.velocity.y -= 1.0
+
+            # Ruch na boki (strzałki lewo/prawo)
+        if keys[pygame.K_LEFT]:
+            player_drone.velocity.x = -5
+        elif keys[pygame.K_RIGHT]:
+            player_drone.velocity.x = 5
+        else:
+            # Jeśli nie trzymamy strzałek, dron przestaje lecieć w bok
+            player_drone.velocity.x = 0
         # Logika i fizyka gry
         # Dron przyspiesza w dół przez grawitację
         player_drone.velocity.y += player_drone.gravity
@@ -34,7 +49,8 @@ def main():
         player_drone.y += player_drone.velocity.y
         # Aktualizujemy pozycję hitboxa drona
         player_drone.rect.y = player_drone.y
-
+        player_drone.x += player_drone.velocity.x
+        player_drone.rect.x = player_drone.x
         # Kolizje
         collision_info = check_collision(player_drone, floor)
         if collision_info.collision:

@@ -32,7 +32,7 @@ class Drone(GameObject):
         self.front_rotor_force: float = 0
         self.back_rotor_force: float = 0
         self.score: int = 0
-        self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        #self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.img: pygame.image = None
 
     def create_image(self, file_dir: str=None, width: float=None, height: float=None):
@@ -47,11 +47,11 @@ class Drone(GameObject):
             self.height = height
 
         if file_dir == None:
-            self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+            #self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
             return
 
         original_img = pygame.image.load(file_dir)
         scaled_img = pygame.transform.scale(original_img,(width, height))
         self.img = scaled_img
-        self.rect = scaled_img.get_rect()
+        #self.rect = scaled_img.get_rect()
         
