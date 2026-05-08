@@ -1,6 +1,5 @@
 import pygame
 
-
 class Window:
 #ustawia domyslny rozmiar okna na 1280x720 i nazwe gry na GAME 
     def __init__(self, size=(1280,720), game_name="Game"):
@@ -16,26 +15,25 @@ class Window:
         image = pygame.image.load(image_path)
         self.background_image = pygame.transform.scale(image, self.screen_size)
 
+    #zmiana koloru tla (domyslnie ustawiony na bialy)
     def change_background_color(self, new_color=(255, 255, 255)):
         self.color = new_color
     
+    #odswiza ekran- metode nalezy wywolac po kazdym przejsciu w petli
     def update(self):
         pygame.display.update()
 
+    #dodaje obiekt typu rect na ekran
     def add_rectangle(self, rectangle):
         self.rectangles.append(rectangle)
     
+    #rysuje obiekty typu rect na ekrannie
     def draw_rect(self, rectangle):
         pygame.draw.rect(self.screen, (105, 194, 245), rectangle)
 
+    """ Rysuje paski mocy silników po obu stronach ekranu"""
     def draw_engine_power(self, left_power: float, right_power: float):
-        """
-        Rysuje paski mocy silników po obu stronach ekranu.
-        
-        :param left_power:  moc lewego silnika  (0.0 – 1.0)
-        :param right_power: moc prawego silnika (0.0 – 1.0)
-        """
-        # Przycinamy wartości do zakresu [0, 1]
+        # Przycinaie wartości do zakresu [0, 1]
         left_power  = max(0.0, min(1.0, left_power))
         right_power = max(0.0, min(1.0, right_power))
         bar_width   = 20          # szerokość paska
@@ -61,6 +59,8 @@ class Window:
             # Obwódka
             pygame.draw.rect(self.screen, color_border, bg_rect, width=2, border_radius=4)
 
+    #zmienia kolor tla oraz dodaje obiekty rect na ekran
+    #mozna zmienic w zaleznosci od potrzeb
     def render(self):
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
@@ -69,6 +69,5 @@ class Window:
 
         for rectangle in self.rectangles:
             self.draw_rect(rectangle)
-
     
     
