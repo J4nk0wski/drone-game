@@ -47,11 +47,29 @@ Atrybuty:
 
 Metody:
 - length - zwraca długość wektora (float)
+
+Przeciążone operatory:
+- dodawanie
+- negacja
+- odejmowanie
 """
 @dataclass
 class Vector2:
     x: float
     y: float
+    
+    def __add__(self, other):
+        if not isinstance(other, Vector2):
+            return NotImplemented
+        return Vector2(self.x + other.x, self.y + other.y)
+    
+    def __neg__(self):
+        return Vector2(-self.x, -self.y)
+    
+    def __sub__(self, other):
+        if not isinstance(other, Vector2):
+            return NotImplemented
+        return self + (-other)
 
     def length(self) -> float:
         return (self.x ** 2 + self.y ** 2) ** 0.5
