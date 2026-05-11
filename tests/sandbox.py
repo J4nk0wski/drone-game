@@ -1,12 +1,14 @@
 import pygame
 
-from ..src.shared import GameObject, ObjectType, Color
-from ..src.drone import Drone
-from ..src.game_logic import check_collision
+from src.shared import GameObject, ObjectType, Color
+from src.drone import Drone
+from src.game_logic import check_collision
+from src.renderer import end_screen_text
+from src.window import Window
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    screen = Window((800, 600))
     pygame.display.set_caption("Drone Game")
     clock = pygame.time.Clock()
     running = True
@@ -44,17 +46,17 @@ def main():
             player_drone.rect.y = player_drone.y
 
         # Rysowanie na ekranie
-        screen.fill(Color.BLACK)
+        screen.screen.fill(Color.BLACK)
 
         # Rysujemy podłogę na szaro
-        pygame.draw.rect(screen, Color.GRAY, floor.rect)
+        pygame.draw.rect(screen.screen, Color.GRAY, floor.rect)
 
         # Rysujemy drona
         if player_drone.img:
-            screen.blit(player_drone.img, player_drone.rect)
+            screen.screen.blit(player_drone.img, player_drone.rect)
         else:
-            pygame.draw.rect(screen, Color.RED, player_drone.rect)
-
+            pygame.draw.rect(screen.screen, Color.RED, player_drone.rect)
+        end_screen_text(screen)
         pygame.display.flip()
         clock.tick(30)
 
