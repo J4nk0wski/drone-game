@@ -27,6 +27,19 @@ class Window:
     def add_rectangle(self, rectangle):
         self.rectangles.append(rectangle)
     
+    def add_image_rect(self, image_path: str, rectangle: pygame.Rect):
+        """
+        Wczytuje zdjęcie ze ścieżki, skaluje je do rozmiaru podanego Rect
+        i dodaje do listy renderowanych obiektów.
+        Rect nadal może być używany jako hitbox — jest przechowywany razem ze zdjęciem.
+
+        Zwraca indeks dodanego elementu (przydatne do późniejszego usunięcia).
+        """
+        image = pygame.image.load(image_path).convert_alpha()
+        scaled_image = pygame.transform.scale(image, (rectangle.width, rectangle.height))
+        self.image_rects.append((scaled_image, rectangle))
+        return len(self.image_rects) - 1
+
     #rysuje obiekty typu rect na ekrannie
     def draw_rect(self, rectangle):
         pygame.draw.rect(self.screen, (105, 194, 245), rectangle)
