@@ -1,78 +1,83 @@
 import pygame
 from src.drone import Drone
-# Importujemy z shared.py i game_logic.py:
 from src.shared import GameObject, ObjectType
 from src.game_logic import check_collision
+#Importujemy klasę Window
+from src.window import Window
 
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Drone Game")
+
+    #Używamy klasy window do tworzenia okna
+    # Podajemy nasz rozmiar i tytuł gry
+    game_window = Window(size=(800, 600), game_name="Drone Game")
+    # Zmieniamy domyślne białe tło na czarne
+    game_window.change_background_color((0, 0, 0))
+
     clock = pygame.time.Clock()
     running = True
 
-    # 1. Tworzymy drona (wyżej, żeby miał z czego spadać)
+    # 1. Tworzymy drona
     player_drone = Drone(x=370, y=50, width=60, height=40)
-    # Wywołujemy funkcję do inicjalizacji grafiki
     player_drone.create_image(None)
-    # Włączamy grawitację (atrybut z drone.py)
     player_drone.gravity = 0.5
 
-    # 2. Tworzymy podłogę bazując na klasie z shared.py
+    # 2. Tworzymy podłogę
     floor = GameObject(x=0, y=550, width=800, height=50, object_type=ObjectType.FLOOR)
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                # Sterowanie
+
+        #sterowanie
         keys = pygame.key.get_pressed()
 
-        # Ciąg w górę (strzałka w górę)
         if keys[pygame.K_UP]:
-            # Dodajemy ciąg silników (przeciwdziała grawitacji)
             player_drone.velocity.y -= 1.0
 
-            # Ruch na boki (strzałki lewo/prawo)
         if keys[pygame.K_LEFT]:
             player_drone.velocity.x = -5
         elif keys[pygame.K_RIGHT]:
             player_drone.velocity.x = 5
         else:
-            # Jeśli nie trzymamy strzałek, dron przestaje lecieć w bok
             player_drone.velocity.x = 0
-        # Logika i fizyka gry
-        # Dron przyspiesza w dół przez grawitację
+
+        # fizyka
         player_drone.velocity.y += player_drone.gravity
-        # Zmieniamy fizyczną pozycję drona
         player_drone.y += player_drone.velocity.y
-        # Aktualizujemy pozycję hitboxa drona
         player_drone.rect.y = player_drone.y
+
         player_drone.x += player_drone.velocity.x
         player_drone.rect.x = player_drone.x
-        # Kolizje
+
+        # kolizje
         collision_info = check_collision(player_drone, floor)
         if collision_info.collision:
-            # Jeśli uderzy w podłogę, zatrzymujemy prędkość spadania
             player_drone.velocity.y = 0
-            # Ustawiamy go idealnie na powierzchni podłogi
             player_drone.y = floor.top - player_drone.height
             player_drone.rect.y = player_drone.y
 
-        # Rysowanie na ekranie
-        screen.fill((0, 0, 0))
+        # Ekran
 
-        # Rysujemy podłogę na szaro
-        pygame.draw.rect(screen, (100, 100, 100), floor.rect)
-
-        # Rysujemy drona
-        if player_drone.img:
-            screen.blit(player_drone.img, player_drone.rect)
+        # Czyścimy tło używając klasy Window
+        if game_window.background_image:
+            game_window.screen.blit(game_window.background_image, (0, 0))
         else:
-            pygame.draw.rect(screen, (255, 0, 0), player_drone.rect)
+            game_window.screen.fill(game_window.color)
 
-        pygame.display.flip()
+        # Rysujemy podłogę i drona na ekranie
+        pygame.draw.rect(game_window.screen, (100, 100, 100), floor.rect)
+
+        if player_drone.img:
+            game_window.screen.blit(player_drone.img, player_drone.rect)
+        else:
+            pygame.draw.rect(game_window.screen, (255, 0, 0), player_drone.rect)
+
+        # Używamy klasy window do odświeżania ekranu
+        game_window.update()
+
         clock.tick(60)
 
     pygame.quit()
