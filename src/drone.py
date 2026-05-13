@@ -1,6 +1,7 @@
 import pygame
 
 from shared import GameObject, ObjectType, Vector2, adjust_brightness
+from shared import GameObject, ObjectType, Vector2
 
 """
 klasa drona którym można sterować
@@ -32,6 +33,16 @@ pobiera z pliku grafikę drona i dostosowywuje do wymiarów drona
 
 --------/create_image_original/--------
 pobiera z pliku grafikę drona i zachowuje oryginalny rozmiar grafiki, nadpisuje rozmiary drona
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
 
 --------/health_check/--------
 jeśli zdrowie <= 0 zabiera życie i regeneruje zdrowie 
@@ -44,6 +55,7 @@ class Drone(GameObject):
     LIVES = 3
     
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40):
+    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.DRONE)
         self.destroyed: bool = False
         self.angle: float = 0
@@ -68,6 +80,19 @@ class Drone(GameObject):
         self.height = self.img.height
 
     def health_check(self) -> pygame.Surface:
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
+
+    def health_check(self) -> None:
         if self.health <= 0:
             self.lives -= 1
             if self.lives <= 0:
@@ -95,3 +120,159 @@ class Drone(GameObject):
                 return temp_img.convert_alpha(64)
 
         
+"""
+Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
+Atrybuty/gettery:
+- x - pozycja (lewy górny róg) w poziomie (float)
+- y - pozycja (lewy górny róg) w pionie (float)
+- width - szerokość obiektu (float)
+- height - wysokość obiektu (float)
+- rect - Rect podłogi (pygame.Rect)
+- left - pozycja lewego boku (float)
+- right - pozycja prawego boku (float)
+- top - pozycja górnej krawędzi (float)
+- bottom - pozycja dolnej krawędzi (float)
+- center_x - środek w poziomie (float)
+- center_y - środek w pionie (float)
+- center - środek (Vector2)
+- img - grafika podłogi (pygame.Surface)
+
+--------/create_image/--------
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+"""
+class Floor(GameObject):
+    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
+        super().__init__(x, y, width, height, ObjectType.FLOOR)
+        self.img: pygame.Surface = None
+
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
+
+"""
+Klasa ściany. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla ściany.
+Atrybuty/gettery:
+- x - pozycja (lewy górny róg) w poziomie (float)
+- y - pozycja (lewy górny róg) w pionie (float)
+- width - szerokość obiektu (float)
+- height - wysokość obiektu (float)
+- rect - Rect podłogi (pygame.Rect)
+- left - pozycja lewego boku (float)
+- right - pozycja prawego boku (float)
+- top - pozycja górnej krawędzi (float)
+- bottom - pozycja dolnej krawędzi (float)
+- center_x - środek w poziomie (float)
+- center_y - środek w pionie (float)
+- center - środek (Vector2)
+- img - grafika ściany (pygame.Surface)
+
+--------/create_image/--------
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+"""
+class Wall(GameObject):
+    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
+        super().__init__(x, y, width, height, ObjectType.WALL)
+        self.img: pygame.Surface = None
+
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
+
+
+"""
+Klasa przeszkody.
+Atrybuty/gettery:
+- x - pozycja (lewy górny róg) w poziomie (float)
+- y - pozycja (lewy górny róg) w pionie (float)
+- width - szerokość obiektu (float)
+- height - wysokość obiektu (float)
+- rect - Rect podłogi (pygame.Rect)
+- left - pozycja lewego boku (float)
+- right - pozycja prawego boku (float)
+- top - pozycja górnej krawędzi (float)
+- bottom - pozycja dolnej krawędzi (float)
+- center_x - środek w poziomie (float)
+- center_y - środek w pionie (float)
+- center - środek (Vector2)
+- img - grafika przeszkody (pygame.Surface)
+- angle - kąt nachylenia (float)
+
+--------/create_image/--------
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+"""
+class Obstacle(GameObject):
+    def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
+        super().__init__(x, y, width, height, ObjectType.OBSTACLE)
+        self.img: pygame.Surface = None
+        self.angle: float = 0
+
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
+
+def create_image_function(file_dir: str, width: float, height: float) -> pygame.Surface:
+    original_img = pygame.image.load(file_dir).convert_alpha()
+    img = pygame.transform.scale(original_img, (width, height))
+    return img
+
+def create_image_original_function(file_dir: str) -> tuple[pygame.Surface, float, float]:
+    img = pygame.image.load(file_dir).convert_alpha()
+    return img, img.get_width(), img.get_height()
+
+def copy_image_function(image: pygame.Surface, width: float, height: float) -> pygame.Surface:
+    img = pygame.transform.scale(image, (width, height))
+    return img
+
+def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface, float, float]:
+    return image, image.get_width(), image.get_height()

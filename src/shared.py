@@ -241,3 +241,4 @@ def adjust_saturation(color: pygame.Color, amount: float) -> pygame.Color:
     h, s, l, a = new_color.hsla
     new_color.hsla = (h, max(0, min(100, s * amount)), l, a) 
     return new_color
+
