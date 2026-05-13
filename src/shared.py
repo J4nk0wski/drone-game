@@ -38,6 +38,9 @@ class ObjectType(Enum):
     FLOOR = auto()
     OBSTACLE = auto()
 
+    def __eq__(self, other) -> bool:
+        return self.value == other.value
+
 """
 klasa Vector2 reprezentuje wektor o dwóch współżędnych
 
