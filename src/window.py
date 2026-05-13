@@ -5,6 +5,7 @@ class Window:
     def __init__(self, size=(1280,720), game_name="Game"):
         self.screen_size = size
         self.screen = pygame.display.set_mode(size)
+        self.image_rects = []
         self.color = (255, 255, 255)
         self.rectangles = []
         self.background_image = None  # domyślnie brak tła
@@ -72,6 +73,17 @@ class Window:
             # Obwódka
             pygame.draw.rect(self.screen, color_border, bg_rect, width=2, border_radius=4)
 
+    def draw_text(self, text: str, pos: tuple, font_size: int = 24, color: tuple = (0, 0, 0), font_path: str = None, centered: bool = False):
+        font = pygame.font.Font(font_path, font_size)
+        surface = font.render(text, True, color)
+        
+        if centered:
+            rect = surface.get_rect(center=pos)
+        else:
+            rect = surface.get_rect(topleft=pos)
+        
+        self.screen.blit(surface, rect)
+
     #zmienia kolor tla oraz dodaje obiekty rect na ekran
     #mozna zmienic w zaleznosci od potrzeb
     def render(self):
@@ -81,6 +93,9 @@ class Window:
             self.screen.fill(self.color)
 
         for rectangle in self.rectangles:
+        
             self.draw_rect(rectangle)
+        for image, rect in self.image_rects:
+            self.screen.blit(image, rect)
     
     
