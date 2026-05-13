@@ -54,7 +54,6 @@ class Drone(GameObject):
     HEALTH = 100
     LIVES = 3
     
-    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.DRONE)
         self.destroyed: bool = False
@@ -68,18 +67,6 @@ class Drone(GameObject):
         self.health = self.HEALTH
         self.lives = self.LIVES
 
-    def create_image(self, file_dir: str):
-        original_img = pygame.image.load(file_dir).convert_alpha()
-        self.width = original_img.width
-        self.height = original_img.height
-        self.img = pygame.transform.scale(original_img, (self.width, self.height))
-
-    def create_image_original(self, file_dir: str):
-        self.img = pygame.image.load(file_dir).convert_alpha()
-        self.width = self.img.width
-        self.height = self.img.height
-
-    def health_check(self) -> pygame.Surface:
     def create_image(self, file_dir: str) -> None:
         self.img = create_image_function(file_dir, self.width, self.height)
 
@@ -98,27 +85,6 @@ class Drone(GameObject):
             if self.lives <= 0:
                 self.destroyed = True
             self.health = self.HEALTH
-
-        if self.img == None:
-            return None
-        
-        match self.health:
-            case x if x >= self.HEALTH * 0.75:
-                temp_img = self.img.copy()
-                return temp_img.convert_alpha(255)
-            
-            case x if x >= self.HEALTH * 0.5:
-                temp_img = self.img.copy()
-                return temp_img.convert_alpha(192)
-            
-            case x if x >= self.HEALTH * 0.25:
-                temp_img = self.img.copy()
-                return temp_img.convert_alpha(128)
-            
-            case x if x >= 0:
-                temp_img = self.img.copy()
-                return temp_img.convert_alpha(64)
-
         
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
