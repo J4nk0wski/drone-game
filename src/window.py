@@ -1,5 +1,5 @@
 import pygame
-
+from shared import Vector2, GameObject
 
 class Window:
 #ustawia domyslny rozmiar okna na 1280x720 i nazwe gry na GAME 
@@ -11,24 +11,57 @@ class Window:
         self.background_image = None  # domyślnie brak tła
         #tworzy okno przy tworzeniu obiektu Window
         pygame.display.set_caption(game_name)
-    
     def set_background_image(self, image_path):
         #Wczytuje zdjęcie ze ścieżki i skaluje je do rozmiaru okna
         image = pygame.image.load(image_path)
         self.background_image = pygame.transform.scale(image, self.screen_size)
 
+    #zmiana koloru tla (domyslnie ustawiony na bialy)
     def change_background_color(self, new_color=(255, 255, 255)):
         self.color = new_color
     
+    #odswiza ekran- metode nalezy wywolac po kazdym przejsciu w petli
     def update(self):
         pygame.display.update()
 
+    #dodaje obiekt typu rect na ekran
     def add_rectangle(self, rectangle):
         self.rectangles.append(rectangle)
     
+    #rysuje obiekty typu rect na ekrannie
     def draw_rect(self, rectangle):
         pygame.draw.rect(self.screen, (105, 194, 245), rectangle)
 
+    """ Rysuje paski mocy silników po obu stronach ekranu"""
+    def draw_engine_power(self, left_power: float, right_power: float):
+        # Przycinaie wartości do zakresu [0, 1]
+        left_power  = max(0.0, min(1.0, left_power))
+        right_power = max(0.0, min(1.0, right_power))
+        bar_width   = 20          # szerokość paska
+        bar_margin  = 10          # odstęp od krawędzi ekranu
+        bar_height  = 200         # maksymalna wysokość paska
+        bar_bottom  = self.screen_size[1] // 2 + bar_height // 2  # wyśrodkowanie pionowe
+        # Kolory
+        color_background = (50,  50,  50)   # tło paska (ciemny)
+        color_fill       = (0,  220,  80)   # wypełnienie (zielony)
+        color_border     = (200, 200, 200)  # obwódka
+        for power, side in ((left_power, "left"), (right_power, "right")):
+            if side == "left":
+                x = bar_margin
+            else:
+                x = self.screen_size[0] - bar_margin - bar_width
+            # Tło paska
+            bg_rect = pygame.Rect(x, bar_bottom - bar_height, bar_width, bar_height)
+            pygame.draw.rect(self.screen, color_background, bg_rect, border_radius=4)
+            # Wypełnienie proporcjonalne do mocy
+            fill_h   = int(bar_height * power)
+            fill_rect = pygame.Rect(x, bar_bottom - fill_h, bar_width, fill_h)
+            pygame.draw.rect(self.screen, color_fill, fill_rect, border_radius=4)
+            # Obwódka
+            pygame.draw.rect(self.screen, color_border, bg_rect, width=2, border_radius=4)
+
+    #zmienia kolor tla oraz dodaje obiekty rect na ekran
+    #mozna zmienic w zaleznosci od potrzeb
     def render(self):
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
@@ -38,6 +71,83 @@ class Window:
         for rectangle in self.rectangles:
             self.draw_rect(rectangle)
 
-        self.update()
+
+"""
+KAAAMEEEERAAAA
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣤⣤⣤⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀   Klasa Camera odpowiada za dynamiczne śledzenie drona, obsługę efektu przybliżenia (zoom)
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣤⡀⠀⠀⠀⠀⠀  oraz ograniczanie ruchu pola widzenia do zadanego obszaru.
+⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠈⢻⣿⣿⡄⠀⠀⠀⠀  
+⠀⠀⠀⠀⠀⠀⠀⣸⣿⡏⠀⠀⠀⣠⣶⣾⣿⣿⣿⠿⠿⠿⢿⣿⣿⣿⣄⠀⠀⠀  Atrybuty:
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠁⠀⠀⢰⣿⣿⣯⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣷⡄⠀    - offset (Vector2): Aktualne przesunięcie kamery w świecie gry.
+⠀⠀⣀⣤⣴⣶⣶⣿⡟⠀⠀⠀⢸⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣷⡀   - width (int): Szerokość okna, height (int): Wysokość okna
+⠀⢰⣿⡟⠋⠉⣹⣿⡇⠀⠀⠀⠘⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣶⣶⣶⣿⣿⣿⠀ - look_ahead (float): Współczynnik wyprzedzania ruchu drona
+⠀⢸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀  -damping (float): Współczynnik płynności ruchu (0.1 = wolna, 1.0 = natychmiastowa)
+⠀⣸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠉⠻⠿⣿⣿⣿⣿⡿⠿⠿⠛⢻⣿⡇⠀⠀  - zoom_level (float): Aktualna skala przybliżenia obrazu.
+⠀⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣧⠀⠀    - min_x, max_x, min_y, max_y (float): Granice świata, poza które kamera nie wyjdzie.
+⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀    Metody:
+⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀    - set_limits: Definiuje prostokątny obszar ograniczający ruch kamery.
+⠀⢿⣿⡆⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀    -update odświeża kamere i wylicza nowe przesunięcie na podstawie pozycji i prędkości drona
+⠀⠸⣿⣧⡀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠃⠀⠀    - apply: Przekształca współrzędne obiektu gry na współrzędne ekranu, uwzględniając przesunięcie i zoom.
+⠀⠀⠛⢿⣿⣿⣿⣿⣇⠀⠀ ⠀⣰⣿⣿⣷⣶⣶⣶⣶⠶⠀⢠⣿⣿⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⣽⣿⡏⠁⠀⠀⢸⣿⡇⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⢹⣿⡆⠀⠀⠀⣸⣿⠇⠀⠀⠀ Jeżeli ktoś ma pomysł na jakieś zmiany i poprawki to śmiało
+⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⣄⣀⣠⣴⣿⣿⠁⠀⠈⠻⣿⣿⣿⣿⡿⠏⠀⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⠈⠛⠻⠿⠿⠿⠿⠋⠁⠀⠀⠀
+ """
+class Camera:
+    def __init__(self, screen_width: int, screen_height: int, look_ahead: float = 15.0, damping: float = 0.08):
+        self.offset = Vector2(0, 0)
+        self.width = screen_width
+        self.height = screen_height
+        self.look_ahead = look_ahead
+        self.damping = damping
+        self.zoom_level = 1.0  # 1.0 to brak przybliżenia
+        #Limity ruchu kamery (None oznacza brak limitu w danym kierunku)
+        self.min_x = None
+        self.max_x = None
+        self.min_y = None
+        self.max_y = None
     
-    
+    def set_limits(self, min_x=None, max_x=None, min_y=None, max_y=None):
+        """Ustawia granice, których kamera nie może przekroczyć"""
+        self.min_x = min_x
+        self.max_x = max_x
+        self.min_y = min_y
+        self.max_y = max_y
+
+    def update(self, player: 'Drone'):
+        # Obliczanie celu (Target) z wyprzedzeniem
+        target_x = player.center.x + (player.velocity.x * self.look_ahead)
+        target_y = player.center.y + (player.velocity.y * self.look_ahead)
+
+        # Centrowanie
+        target_offset_x = target_x - self.width / 2
+        target_offset_y = target_y - self.height / 2
+
+        # Damping
+        self.offset.x += (target_offset_x - self.offset.x) * self.damping
+        self.offset.y += (target_offset_y - self.offset.y) * self.damping
+
+        # Blokowanie kamery wewnątrz limitów
+        if self.min_x is not None: self.offset.x = max(self.min_x, self.offset.x)
+        if self.max_x is not None: self.offset.x = min(self.max_x - self.width, self.offset.x)
+        if self.min_y is not None: self.offset.y = max(self.min_y, self.offset.y)
+        if self.max_y is not None: self.offset.y = min(self.max_y - self.height, self.offset.y)
+
+    def apply(self, game_object: GameObject) -> pygame.Rect:
+        # 1. Obliczamy pozycję względem kamery w świecie (offset)
+        rel_x = game_object.x - self.offset.x
+        rel_y = game_object.y - self.offset.y
+        
+        # 2. Przesuwamy punkt odniesienia do środka ekranu, skalujemy i wracamy
+        # To sprawia, że zoom "celuje" w środek okna
+        center_x, center_y = self.width / 2, self.height / 2
+        
+        final_x = (rel_x - center_x) * self.zoom_level + center_x
+        final_y = (rel_y - center_y) * self.zoom_level + center_y
+        
+        # 3. Skalujemy również wymiary obiektu
+        final_w = game_object.width * self.zoom_level
+        final_h = game_object.height * self.zoom_level
+        
+        return pygame.Rect(final_x, final_y, final_w, final_h)

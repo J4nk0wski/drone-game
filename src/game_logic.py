@@ -1,6 +1,6 @@
-from .shared import GameObject, CollisionSide, CollisionInfo
+from shared import GameObject, CollisionSide, CollisionInfo
 
-from .drone import Drone
+from drone import Drone
 
 """
 Sprawdz czy wystąpiła kolizja i oblicza dane kolizji CollisionInfo
@@ -22,4 +22,3 @@ def check_collision(dynamic: GameObject, static: GameObject) -> CollisionInfo:
     if isinstance(dynamic, Drone):
         return CollisionInfo(True, side, static, dynamic.velocity)
     return CollisionInfo(True, side, static)
-
