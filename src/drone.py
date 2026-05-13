@@ -1,6 +1,5 @@
 import pygame
 
-from shared import GameObject, ObjectType, Vector2, adjust_brightness
 from shared import GameObject, ObjectType, Vector2
 
 """
