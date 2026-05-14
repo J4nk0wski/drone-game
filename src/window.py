@@ -5,6 +5,9 @@ class Window:
     def __init__(self, size=(1280,720), game_name="Game"):
         self.screen_size = size
         self.screen = pygame.display.set_mode(size)
+        #ustawia domyślnie 60 fps
+        self.clock = pygame.Clock()  
+        self.fps = 60
         self.image_rects = []
         self.color = (255, 255, 255)
         self.rectangles = []
@@ -84,6 +87,19 @@ class Window:
         
         self.screen.blit(surface, rect)
 
+
+    def set_fps(self, fps: int):
+        #Ustawia limit klatek na sekundę
+        self.fps = fps
+
+    def tick(self):
+        #Wywołaj raz na końcu każdej iteracji pętli gry.
+        self.clock.tick(self.fps)
+
+    def get_fps(self):
+        #Zwraca aktualne FPS
+        return self.clock.get_fps()
+
     #zmienia kolor tla oraz dodaje obiekty rect na ekran
     #mozna zmienic w zaleznosci od potrzeb
     def render(self):
@@ -97,5 +113,13 @@ class Window:
             self.draw_rect(rectangle)
         for image, rect in self.image_rects:
             self.screen.blit(image, rect)
-    
+
+"""
+Jak uzywac window.render() window.update() oraz window.tick() w petli gry:
+    while running:
+    # logika gry...
+    window.render()
+    window.update()
+    window.tick() ← na samym końcu
+"""
     
