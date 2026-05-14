@@ -1,9 +1,9 @@
-from .shared import GameObject, CollisionSide, CollisionInfo
-
-from .drone import Drone
+from shared import GameObject, CollisionSide, CollisionInfo
+from shared import Vector2
+from drone import Drone
 
 """
-
+Sprawdz czy wystąpiła kolizja i oblicza dane kolizji CollisionInfo
 """
 def check_collision(dynamic: GameObject, static: GameObject) -> CollisionInfo:
     if not dynamic.rect.colliderect(static.rect):
@@ -19,7 +19,5 @@ def check_collision(dynamic: GameObject, static: GameObject) -> CollisionInfo:
         CollisionSide.RIGHT: s_rect.right - d_rect.left,
     }
     side = min(overlaps, key=overlaps.get)
-    if isinstance(dynamic, Drone):
-        return CollisionInfo(True, side, static, dynamic.velocity)
-    return CollisionInfo(True, side, static)
-
+    velocity = getattr(dynamic, 'velocity', Vector2(0, 0))
+    return CollisionInfo(True, side, static, velocity)
