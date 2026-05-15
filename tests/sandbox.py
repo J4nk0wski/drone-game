@@ -58,7 +58,7 @@ def main():
             screen.screen.blit(player_drone.img, player_drone.rect)
         else:
             pygame.draw.rect(screen.screen, Color.RED, player_drone.rect)
-        show_game_over_screen(screen.screen, player_drone)
+        show_game_over_screen(screen, player_drone)
         pygame.display.flip()
         clock.tick(30)
 
