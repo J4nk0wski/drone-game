@@ -6,8 +6,11 @@ from src.drone import Drone
 """
 Wyświetla ekran końca gry z wycentrowanym napisem i interaktywnym przyciskiem
 Zmienia stan player_drone.destroyed na False po kliknięciu 'Play again?'
+Po wybraniu opcji ponownej gry parametry określające pozycję drona to:
+start_x (domyślnie 0)
+start_y (domyślnie 0)
 """
-def show_game_over_screen(screen: Window, player_drone: Drone) -> None:
+def show_game_over_screen(screen: Window, player_drone: Drone, start_x: float=0, start_y: float=0) -> None:
     #czcionki napisów
     font_title = pygame.font.SysFont("Arial", 64, bold=True)
     font_button = pygame.font.SysFont("Arial", 32)
@@ -42,23 +45,16 @@ def show_game_over_screen(screen: Window, player_drone: Drone) -> None:
         #kliknięcie przycisku
         if mouse_pressed[0]:
             player_drone.destroyed = False
-            # Tutaj możesz też zresetować inne parametry drona, np.:
-            # player_drone.health = player_drone.HEALTH
-            # player_drone.lives = player_drone.LIVES
-            # player_drone.x, player_drone.y = 370, 50
-            # player_drone.velocity.y = 0
+            player_drone.reset(start_x, start_y)
 
-    # 5. Rysowanie elementów na ekranie
-    # Przyciemniamy lekko tło gry pod spodem (opcjonalne, ale daje ładny efekt)
+    #rysowanie
+    #lekkie przyciemnienie tła
     overlay = pygame.Surface((screen.screen_size[0], screen.screen_size[1]), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))  # Czarny z przezroczystością Alpha
+    overlay.fill((0, 0, 0, 180))
     screen.screen.blit(overlay, (0, 0))
 
-    # Rysujemy napis główny
     screen.screen.blit(title_surface, title_rect)
 
-    # Rysujemy tło przycisku (zaokrąglone rogi = border_radius=5)
     pygame.draw.rect(screen.screen, button_color, button_rect, border_radius=5)
 
-    # Rysujemy tekst na przycisku
     screen.screen.blit(button_text_surface, button_text_rect)
