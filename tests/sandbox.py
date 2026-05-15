@@ -3,7 +3,7 @@ import pygame
 from src.shared import GameObject, ObjectType, Color
 from src.drone import Drone
 from src.game_logic import check_collision
-from src.renderer import end_screen_text
+from src.renderer import show_game_over_screen
 from src.window import Window
 
 def main():
@@ -40,7 +40,9 @@ def main():
         collision_info = check_collision(player_drone, floor)
         if collision_info.collision:
             # Jeśli uderzy w podłogę, zatrzymujemy prędkość spadania
-            player_drone.velocity.y = 0
+            if player_drone.velocity.y < 2:
+                player_drone.velocity.y = 0
+            player_drone.velocity.y = -player_drone.velocity.y * 0.6
             # Ustawiamy go idealnie na powierzchni podłogi
             player_drone.y = floor.top - player_drone.height
             player_drone.rect.y = player_drone.y
@@ -56,7 +58,7 @@ def main():
             screen.screen.blit(player_drone.img, player_drone.rect)
         else:
             pygame.draw.rect(screen.screen, Color.RED, player_drone.rect)
-        end_screen_text(screen)
+        show_game_over_screen(screen.screen, player_drone)
         pygame.display.flip()
         clock.tick(30)
 
