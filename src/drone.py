@@ -84,6 +84,20 @@ class Drone(GameObject):
             if self.lives <= 0:
                 self.destroyed = True
             self.health = self.HEALTH
+    """
+    Przywraca parametry drona do stanu początkowego
+    Metoda przyjmuje pozycję początkową (inaczej x=0, y=0)
+    """
+    def reset(self, start_x: float=0, start_y: float=0) -> None:
+        self.x = start_x
+        self.y = start_y
+        self.velocity = Vector2(0, 0)
+        self.gravity = 0
+        self.front_rotor_force = 0
+        self.back_rotor_force = 0
+        self.score = 0
+        self.health = self.HEALTH
+        self.lives = self.LIVES
         
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
