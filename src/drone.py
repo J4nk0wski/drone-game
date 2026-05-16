@@ -255,3 +255,12 @@ def copy_image_function(image: pygame.Surface, width: float, height: float) -> p
 
 def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface, float, float]:
     return image, image.get_width(), image.get_height()
+
+"""
+Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera punkty HP
+"""
+class Enemy(GameObject):
+    def __init__(self, x: float = 0, y: float = 0) -> None:
+        super().__init__(x, y, 50, 50, ObjectType.ENEMY)
+        self.img: pygame.Surface = None
+        self.angle: float = 0
