@@ -264,3 +264,14 @@ class Enemy(GameObject):
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
         self.img: pygame.Surface = None
         self.angle: float = 0
+        self.reload_counter: int = 0
+        self.reloading: bool = False
+
+    def search(self, dron: Drone):
+        pass
+
+    def shoot(self):
+        pass
+
+    def reload(self):
+        pass
