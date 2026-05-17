@@ -264,8 +264,10 @@ class Enemy(GameObject):
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
         self.img: pygame.Surface = None
         self.angle: float = 0
+        #czas w milisekundach
         self.reload_time: int = reload_time
         self.reload_timer: float = 0
+
         self.reloading: bool = False
     """
     Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
@@ -288,8 +290,16 @@ class Enemy(GameObject):
         return True
 
 
-    def shoot(self):
-        pass
+    def shoot(self, dron: GameObject, objects: list[GameObject]):
+        if not self.reloading and self.search(dron, objects):
+            self.reloading = True
+            #TO DO strzelanie pociskiem
+        self.reload()
 
-    def reload(self):
-        pass
+    def reload(self) -> None:
+        if self.reloading:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.reload_timer >= self.reload_time:
+                self.reload_timer = current_time
+                self.reloading = False
+
