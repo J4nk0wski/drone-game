@@ -260,15 +260,33 @@ def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface,
 Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera punkty HP
 """
 class Enemy(GameObject):
-    def __init__(self, x: float = 0, y: float = 0) -> None:
+    def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
         self.img: pygame.Surface = None
         self.angle: float = 0
-        self.reload_counter: int = 0
+        self.reload_time: int = reload_time
+        self.reload_timer: float = 0
         self.reloading: bool = False
+    """
+    Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
+    Parametry jakie trzeba podać to:
+    - szukany obiekt (instancja klasy GameObject)
+    - lista wszystkich obiektów które 'są materialne' (zasłaniają widoczność), 
+      podane jako lista obiektów dziedziczących po GameObject
+    """
+    def search(self, dron: GameObject, objects: list[GameObject]) -> bool:
+        start_pos = self.rect.center
+        end_pos = dron.rect.center
 
-    def search(self, dron: Drone):
-        pass
+        for obj in objects:
+            if obj == self or obj == dron:
+                continue
+
+            if obj.rect.clipline(start_pos, end_pos):
+                return False
+
+        return True
+
 
     def shoot(self):
         pass
