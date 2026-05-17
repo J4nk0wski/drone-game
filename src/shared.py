@@ -38,6 +38,7 @@ class ObjectType(Enum):
     FLOOR = auto()
     OBSTACLE = auto()
     ENEMY = auto()
+    BULLET = auto()
 
     def __eq__(self, other) -> bool:
         return self.value == other.value
