@@ -2,6 +2,7 @@ import pygame
 
 from shared import GameObject, ObjectType, Vector2
 
+from math import atan2, degrees
 """
 klasa drona którym można sterować
 
@@ -46,8 +47,6 @@ zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymi
 --------/health_check/--------
 jeśli zdrowie <= 0 zabiera życie i regeneruje zdrowie 
 jeśli brak żyć dron.destroyed = True
-zwraca Surface drona
-im mniej zdrowia tym bardziej przezroczysty Surface
 """
 class Drone(GameObject):
     HEALTH = 100
@@ -269,6 +268,20 @@ class Enemy(GameObject):
         self.reload_timer: float = 0
 
         self.reloading: bool = False
+        self.bullets: list[Bullet] = []
+
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
+
     """
     Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
     Parametry jakie trzeba podać to:
@@ -292,14 +305,46 @@ class Enemy(GameObject):
 
     def shoot(self, dron: GameObject, objects: list[GameObject]):
         if not self.reloading and self.search(dron, objects):
+            self.reload_timer = pygame.time.get_ticks()
             self.reloading = True
             #TO DO strzelanie pociskiem
-        self.reload()
+        else:
+            self.reload()
 
     def reload(self) -> None:
         if self.reloading:
             current_time = pygame.time.get_ticks()
             if current_time - self.reload_timer >= self.reload_time:
-                self.reload_timer = current_time
                 self.reloading = False
 
+class Bullet(GameObject):
+    def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
+        super().__init__(x, y, 10, 10, ObjectType.BULLET)
+        self.img: pygame.Surface = None
+        self.velocity: Vector2 = Vector2(vel_x, vel_y)
+        self.angle: float = 0
+        self.tilt()
+
+    """
+    Oblicza nachylenie z podanych prędkości.
+    """
+    def tilt(self):
+        if self.velocity.x == 0 and self.velocity.y == 0:
+            return
+
+        angle_rad = atan2(self.velocity.y, self.velocity.x)
+        angle_deg = degrees(angle_rad)
+
+        self.angle = -angle_deg
+
+    def create_image(self, file_dir: str) -> None:
+        self.img = create_image_function(file_dir, self.width, self.height)
+
+    def create_image_original(self, file_dir: str) -> None:
+        self.img, self.width, self.height = create_image_original_function(file_dir)
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = copy_image_function(image, self.width, self.height)
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img, self.width, self.height = copy_image_original_function(image)
