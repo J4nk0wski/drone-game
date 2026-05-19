@@ -61,21 +61,8 @@ class Drone(GameObject):
         self.front_rotor_force: float = 0
         self.back_rotor_force: float = 0
         self.score: int = 0
-        self.img: pygame.Surface = None
         self.health = self.HEALTH
         self.lives = self.LIVES
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
 
     def health_check(self) -> None:
         if self.health <= 0:
@@ -130,19 +117,6 @@ zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymi
 class Floor(GameObject):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.FLOOR)
-        self.img: pygame.Surface = None
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
 
 """
 Klasa ściany. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla ściany.
@@ -176,20 +150,6 @@ zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymi
 class Wall(GameObject):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.WALL)
-        self.img: pygame.Surface = None
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
-
 
 """
 Klasa przeszkody.
@@ -224,36 +184,7 @@ zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymi
 class Obstacle(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
         super().__init__(x, y, width, height, ObjectType.OBSTACLE)
-        self.img: pygame.Surface = None
         self.angle: float = 0
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
-
-def create_image_function(file_dir: str, width: float, height: float) -> pygame.Surface:
-    original_img = pygame.image.load(file_dir).convert_alpha()
-    img = pygame.transform.scale(original_img, (width, height))
-    return img
-
-def create_image_original_function(file_dir: str) -> tuple[pygame.Surface, float, float]:
-    img = pygame.image.load(file_dir).convert_alpha()
-    return img, img.get_width(), img.get_height()
-
-def copy_image_function(image: pygame.Surface, width: float, height: float) -> pygame.Surface:
-    img = pygame.transform.scale(image, (width, height))
-    return img
-
-def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface, float, float]:
-    return image, image.get_width(), image.get_height()
 
 """
 Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera punkty HP
@@ -261,7 +192,6 @@ Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera p
 class Enemy(GameObject):
     def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
-        self.img: pygame.Surface = None
         self.angle: float = 0
         #czas w milisekundach
         self.reload_time: int = reload_time
@@ -269,18 +199,6 @@ class Enemy(GameObject):
 
         self.reloading: bool = False
         self.bullets: list[Bullet] = []
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
 
     """
     Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
@@ -326,7 +244,6 @@ Klasa pocisku, króry znika po trafieniu w przeszkodę.
 class Bullet(GameObject):
     def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
-        self.img: pygame.Surface = None
         self.velocity: Vector2 = Vector2(vel_x, vel_y)
         self.angle: float = 0
         self.tilt()
@@ -342,15 +259,3 @@ class Bullet(GameObject):
         angle_deg = degrees(angle_rad)
 
         self.angle = -angle_deg
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
