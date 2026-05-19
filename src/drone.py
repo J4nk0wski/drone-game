@@ -320,6 +320,9 @@ class Enemy(GameObject):
             if current_time - self.reload_timer >= self.reload_time:
                 self.reloading = False
 
+"""
+Klasa pocisku, króry znika po trafieniu w przeszkodę.
+"""
 class Bullet(GameObject):
     def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
