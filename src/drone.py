@@ -311,6 +311,9 @@ class Enemy(GameObject):
         else:
             self.reload()
 
+    """
+    Przeładowuje broń przeciwnika co określony czas (reload time).
+    """
     def reload(self) -> None:
         if self.reloading:
             current_time = pygame.time.get_ticks()
