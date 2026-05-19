@@ -106,6 +106,25 @@ class GameObject:
     height: float
     object_type: ObjectType
 
+    img: pygame.Surface = None
+
+    def create_image(self, file_dir: str) -> None:
+        original_img = pygame.image.load(file_dir).convert_alpha()
+        self.img = pygame.transform.scale(original_img, (int(self.width), int(self.height)))
+
+    def create_image_original(self, file_dir: str) -> None:
+        img = pygame.image.load(file_dir).convert_alpha()
+        self.img = img
+        self.width, self.height = img.get_size()
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = pygame.transform.scale(image, (int(self.width), int(self.height)))
+
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img = image
+        self.width, self.height = image.get_size()
+
     @property
     def rect(self): return pygame.Rect(self.x, self.y, self.width, self.height)
 
