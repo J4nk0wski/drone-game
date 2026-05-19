@@ -34,6 +34,12 @@ class Drone(GameObject):
         self.score: int = 0
         self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.img: pygame.image = None
+        #obsluga silnika i obrotu drona
+        self.angular_velocity: float = 0.0          #w rad/s
+        self.inertia: float = (width ** 2) / 12.0   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
+
+    def update_physics():
+        pass
 
     def create_image(self, file_dir: str=None, width: float=None, height: float=None):
         if width == None:
@@ -54,4 +60,16 @@ class Drone(GameObject):
         scaled_img = pygame.transform.scale(original_img,(width, height))
         self.img = scaled_img
         self.rect = scaled_img.get_rect()
-        
+
+class Rotor:
+    def __init__(self, offset_x: float, size: int = 6):
+        self.offset_x: float = offset_x   # odległość od środka drona (ujemna = tył)
+        szelf.force: float = 0.0            # siła ciągu (zawsze >= 0)
+        self.size: int = size
+        self.x: float = 0.0                #pozycja silnika
+        self.y: float = 0.0
+ 
+    def set_force(self, force: float) -> None:
+        """Ustawia siłę silnika (nie może być ujemna)."""
+        self.force = max(0.0, force)
+ 
