@@ -188,6 +188,22 @@ class Obstacle(GameObject):
 
 """
 Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera punkty HP
+
+--------/create_image/--------
+pobiera z pliku grafikę drona i dostosowywuje do wymiarów drona
+
+--------/create_image_original/--------
+pobiera z pliku grafikę drona i zachowuje oryginalny rozmiar grafiki, nadpisuje rozmiary drona
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
 """
 class Enemy(GameObject):
     def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000) -> None:
@@ -240,6 +256,25 @@ class Enemy(GameObject):
 
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
+
+--------/create_image/--------
+pobiera z pliku grafikę drona i dostosowywuje do wymiarów drona
+
+--------/create_image_original/--------
+pobiera z pliku grafikę drona i zachowuje oryginalny rozmiar grafiki, nadpisuje rozmiary drona
+pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
+
+--------/create_image_original/--------
+pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
+
+--------/copy_image/--------
+dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
+
+--------/copy_image_original/--------
+zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+
+--------/tilt/--------
+Oblicza nachylenie z prędkości pocisku.
 """
 class Bullet(GameObject):
     def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
@@ -249,7 +284,7 @@ class Bullet(GameObject):
         self.tilt()
 
     """
-    Oblicza nachylenie z podanych prędkości.
+    Oblicza nachylenie z prędkości pocisku.
     """
     def tilt(self):
         if self.velocity.x == 0 and self.velocity.y == 0:
