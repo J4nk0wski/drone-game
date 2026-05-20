@@ -1,5 +1,4 @@
 import pygame
-from pygame.examples.go_over_there import target_position
 
 from shared import GameObject, ObjectType, Vector2
 
@@ -207,7 +206,7 @@ dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
 zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
 """
 class Enemy(GameObject):
-    def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000) -> None:
+    def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000, bullet_speed: float=7) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
         self.angle: float = 0
         #czas w milisekundach
@@ -216,6 +215,7 @@ class Enemy(GameObject):
 
         self.reloading: bool = False
         self.bullets: list[Bullet] = []
+        self.bullet_speed: float = bullet_speed
 
     """
     Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
