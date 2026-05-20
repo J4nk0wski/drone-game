@@ -270,6 +270,36 @@ class Enemy(GameObject):
 
         return  -angle_deg
 
+    def update_bullets(self, dron: Drone, objects: list[GameObject], screen_width: int = 800, screen_height: int = 600) -> None:
+        """
+        Aktualizuje pozycję pocisków i obsługuje kolizje.
+        Usuwa pociski, które trafiły w przeszkodę, drona lub wyleciały poza ekran.
+        """
+        for bullet in reversed(self.bullets):
+            bullet.update_pos()
+
+            hit_something = False
+
+            for obj in objects:
+                if obj == self or obj.object_type == ObjectType.BULLET:
+                    continue
+
+                if bullet.rect.colliderect(obj.rect):
+                    hit_something = True
+                    break
+
+            if bullet.rect.colliderect(dron.rect):
+                dron.health -= 30
+                dron.health_check()
+                hit_something = True
+
+            if (bullet.x < 0 or bullet.x > screen_width or
+                    bullet.y < 0 or bullet.y > screen_height):
+                hit_something = True
+
+            if hit_something:
+                self.bullets.remove(bullet)
+
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
 
@@ -298,8 +328,6 @@ class Bullet(GameObject):
         self.speed = speed
         self.angle: float = angle
         self.velocity: Vector2 = Vector2(vel_x, vel_y)
-
-
 
     """
     Aktualizuje pozycję obiektu na podstawie jego prędkości.
