@@ -2,7 +2,7 @@ import pygame
 
 from shared import GameObject, ObjectType, Vector2
 
-from math import atan2, degrees
+from math import atan2, degrees, radians, sin, cos
 """
 klasa drona którym można sterować
 
@@ -327,7 +327,18 @@ class Bullet(GameObject):
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
         self.speed = speed
         self.angle: float = angle
-        self.velocity: Vector2 = Vector2(vel_x, vel_y)
+        self.velocity: Vector2 = self.calculate_velocity_from_angle()
+
+    """
+    Oblicza składowe wektora prędkości X i Y na podstawie kąta dopasowanego do Pygame
+    oraz zadanej prędkości (speed).
+    """
+    def calculate_velocity_from_angle(self) -> Vector2:
+        standard_angle_deg = -self.angle
+        angle_rad = radians(standard_angle_deg)
+        vel_x = cos(angle_rad) * self.speed
+        vel_y = sin(angle_rad) * self.speed
+        return Vector2(vel_x, vel_y)
 
     """
     Aktualizuje pozycję obiektu na podstawie jego prędkości.
