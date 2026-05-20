@@ -245,8 +245,9 @@ class Enemy(GameObject):
             #TO DO strzelanie pociskiem
             end_pos = dron.center
             start_pos = self.center
-
-
+            diff_pos = end_pos - start_pos
+            new_bullet = Bullet(self.center_x, self.center_y, self.tilt(diff_pos))
+            self.bullets.append(new_bullet)
         else:
             self.reload()
 
@@ -263,8 +264,8 @@ class Enemy(GameObject):
     Oblicza nachylenie.
     """
     @staticmethod
-    def tilt(dist_x, dist_y) -> float:
-        angle_rad = atan2(dist_y, dist_x)
+    def tilt(dist: Vector2) -> float:
+        angle_rad = atan2(dist.y, dist.x)
         angle_deg = degrees(angle_rad)
 
         return  -angle_deg
