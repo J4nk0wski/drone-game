@@ -1,4 +1,5 @@
 import pygame
+from pygame.examples.go_over_there import target_position
 
 from shared import GameObject, ObjectType, Vector2
 
@@ -242,6 +243,10 @@ class Enemy(GameObject):
             self.reload_timer = pygame.time.get_ticks()
             self.reloading = True
             #TO DO strzelanie pociskiem
+            end_pos = dron.center
+            start_pos = self.center
+
+
         else:
             self.reload()
 
@@ -253,6 +258,16 @@ class Enemy(GameObject):
             current_time = pygame.time.get_ticks()
             if current_time - self.reload_timer >= self.reload_time:
                 self.reloading = False
+
+    """
+    Oblicza nachylenie.
+    """
+    @staticmethod
+    def tilt(dist_x, dist_y) -> float:
+        angle_rad = atan2(dist_y, dist_x)
+        angle_deg = degrees(angle_rad)
+
+        return  -angle_deg
 
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
@@ -281,16 +296,5 @@ class Bullet(GameObject):
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
         self.velocity: Vector2 = Vector2(vel_x, vel_y)
         self.angle: float = 0
-        self.tilt()
 
-    """
-    Oblicza nachylenie z prędkości pocisku.
-    """
-    def tilt(self):
-        if self.velocity.x == 0 and self.velocity.y == 0:
-            return
 
-        angle_rad = atan2(self.velocity.y, self.velocity.x)
-        angle_deg = degrees(angle_rad)
-
-        self.angle = -angle_deg
