@@ -297,4 +297,7 @@ class Bullet(GameObject):
         self.velocity: Vector2 = Vector2(vel_x, vel_y)
         self.angle: float = 0
 
+    def update_pos(self) -> None:
+        self.x += self.velocity.x
+        self.y += self.velocity.y
 
