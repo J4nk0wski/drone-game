@@ -246,7 +246,7 @@ class Enemy(GameObject):
             end_pos = dron.center
             start_pos = self.center
             diff_pos = end_pos - start_pos
-            new_bullet = Bullet(self.center_x, self.center_y, self.tilt(diff_pos))
+            new_bullet = Bullet(self.center_x, self.center_y, self.tilt(diff_pos), self.bullet_speed)
             self.bullets.append(new_bullet)
         else:
             self.reload()
@@ -293,10 +293,13 @@ zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymi
 Oblicza nachylenie z prędkości pocisku.
 """
 class Bullet(GameObject):
-    def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
+    def __init__(self, x: float, y: float, angle: float, speed: float) -> None:
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
+        self.speed = speed
+        self.angle: float = angle
         self.velocity: Vector2 = Vector2(vel_x, vel_y)
-        self.angle: float = 0
+
+
 
     """
     Aktualizuje pozycję obiektu na podstawie jego prędkości.
