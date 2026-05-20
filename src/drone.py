@@ -29,17 +29,22 @@ class Drone(GameObject):
         self.angle: float = 0
         self.velocity: Vector2 = Vector2(0, 0)
         self.gravity: float = 0
-        self.front_rotor_force: float = 0
-        self.back_rotor_force: float = 0
         self.score: int = 0
         self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.img: pygame.image = None
+        #silnik lewy i prawy
+        self.right_rotor = Rotor(width/2, x + width/2, y)
+        self.left_rotor = Rotor(width/2, x - width/2, y)
         #obsluga silnika i obrotu drona
         self.angular_velocity: float = 0.0          #w rad/s
         self.inertia: float = (width ** 2) / 12.0   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
+    
 
-    def update_physics():
-        pass
+    def update_physics(self, dt: float):
+        torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
+        angular_acceleration = torque / self.inertia
+        self.angular_velocity += angular_acceleration * dt
+        
 
     def create_image(self, file_dir: str=None, width: float=None, height: float=None):
         if width == None:
@@ -62,14 +67,14 @@ class Drone(GameObject):
         self.rect = scaled_img.get_rect()
 
 class Rotor:
-    def __init__(self, offset_x: float, size: int = 6):
-        self.offset_x: float = offset_x   # odległość od środka drona (ujemna = tył)
-        szelf.force: float = 0.0            # siła ciągu (zawsze >= 0)
+    def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
+        self.offset_x: float = offset   # odległość od środka drona (dodatnia w prawo, ujemna w lewo)
+        self.force: float = 0.0            # siła ciągu (zawsze >= 0)
         self.size: int = size
-        self.x: float = 0.0                #pozycja silnika
-        self.y: float = 0.0
+        self.x = x_pos                #pozycja silnika
+        self.y = y_pos
  
     def set_force(self, force: float) -> None:
         """Ustawia siłę silnika (nie może być ujemna)."""
         self.force = max(0.0, force)
- 
+
