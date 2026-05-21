@@ -1,4 +1,6 @@
 import pygame
+from shared import Vector2, GameObject
+
 
 class Window:
 #ustawia domyslny rozmiar okna na 1280x720 i nazwe gry na GAME 
@@ -109,7 +111,6 @@ class Window:
             self.screen.fill(self.color)
 
         for rectangle in self.rectangles:
-        
             self.draw_rect(rectangle)
         for image, rect in self.image_rects:
             self.screen.blit(image, rect)
@@ -123,3 +124,83 @@ Jak uzywac window.render() window.update() oraz window.tick() w petli gry:
     window.tick() ← na samym końcu
 """
     
+
+"""
+KAAAMEEEERAAAA
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣤⣤⣤⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀   Klasa Camera odpowiada za dynamiczne śledzenie drona, obsługę efektu przybliżenia (zoom)
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣤⡀⠀⠀⠀⠀⠀  oraz ograniczanie ruchu pola widzenia do zadanego obszaru.
+⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠈⢻⣿⣿⡄⠀⠀⠀⠀  
+⠀⠀⠀⠀⠀⠀⠀⣸⣿⡏⠀⠀⠀⣠⣶⣾⣿⣿⣿⠿⠿⠿⢿⣿⣿⣿⣄⠀⠀⠀  Atrybuty:
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠁⠀⠀⢰⣿⣿⣯⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣷⡄⠀    - offset (Vector2): Aktualne przesunięcie kamery w świecie gry.
+⠀⠀⣀⣤⣴⣶⣶⣿⡟⠀⠀⠀⢸⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣷⡀   - width (int): Szerokość okna, height (int): Wysokość okna
+⠀⢰⣿⡟⠋⠉⣹⣿⡇⠀⠀⠀⠘⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣶⣶⣶⣿⣿⣿⠀ - look_ahead (float): Współczynnik wyprzedzania ruchu drona
+⠀⢸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀  -damping (float): Współczynnik płynności ruchu (0.1 = wolna, 1.0 = natychmiastowa)
+⠀⣸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠉⠻⠿⣿⣿⣿⣿⡿⠿⠿⠛⢻⣿⡇⠀⠀  - zoom_level (float): Aktualna skala przybliżenia obrazu.
+⠀⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣧⠀⠀    - min_x, max_x, min_y, max_y (float): Granice świata, poza które kamera nie wyjdzie.
+⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀    Metody:
+⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀    - set_limits: Definiuje prostokątny obszar ograniczający ruch kamery.
+⠀⢿⣿⡆⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀    -update odświeża kamere i wylicza nowe przesunięcie na podstawie pozycji i prędkości drona
+⠀⠸⣿⣧⡀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠃⠀⠀    - apply: Przekształca współrzędne obiektu gry na współrzędne ekranu, uwzględniając przesunięcie i zoom.
+⠀⠀⠛⢿⣿⣿⣿⣿⣇⠀⠀ ⠀⣰⣿⣿⣷⣶⣶⣶⣶⠶⠀⢠⣿⣿⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⣽⣿⡏⠁⠀⠀⢸⣿⡇⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⢹⣿⡆⠀⠀⠀⣸⣿⠇⠀⠀⠀ Jeżeli ktoś ma pomysł na jakieś zmiany i poprawki to śmiało
+⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⣄⣀⣠⣴⣿⣿⠁⠀⠈⠻⣿⣿⣿⣿⡿⠏⠀⠀⠀⠀ 
+⠀⠀⠀⠀⠀⠀⠀⠈⠛⠻⠿⠿⠿⠿⠋⠁⠀⠀⠀
+ """
+class Camera:
+    def __init__(self, screen_width: int, screen_height: int, look_ahead: float = 15.0, damping: float = 0.08):
+        self.offset = Vector2(0, 0)
+        self.width = screen_width
+        self.height = screen_height
+        self.look_ahead = look_ahead
+        self.damping = damping
+        self.zoom_level = 1.0  # 1.0 to brak przybliżenia
+        #Limity ruchu kamery (None oznacza brak limitu w danym kierunku)
+        self.min_x = None
+        self.max_x = None
+        self.min_y = None
+        self.max_y = None
+    
+    def set_limits(self, min_x=None, max_x=None, min_y=None, max_y=None):
+        """Ustawia granice, których kamera nie może przekroczyć"""
+        self.min_x = min_x
+        self.max_x = max_x
+        self.min_y = min_y
+        self.max_y = max_y
+
+    def update(self, player: 'Drone'):
+        # Obliczanie celu (Target) z wyprzedzeniem
+        target_x = player.center.x + (player.velocity.x * self.look_ahead)
+        target_y = player.center.y + (player.velocity.y * self.look_ahead)
+
+        # Centrowanie
+        target_offset_x = target_x - self.width / 2
+        target_offset_y = target_y - self.height / 2
+
+        # Damping
+        self.offset.x += (target_offset_x - self.offset.x) * self.damping
+        self.offset.y += (target_offset_y - self.offset.y) * self.damping
+
+        # Blokowanie kamery wewnątrz limitów
+        if self.min_x is not None: self.offset.x = max(self.min_x, self.offset.x)
+        if self.max_x is not None: self.offset.x = min(self.max_x - self.width, self.offset.x)
+        if self.min_y is not None: self.offset.y = max(self.min_y, self.offset.y)
+        if self.max_y is not None: self.offset.y = min(self.max_y - self.height, self.offset.y)
+
+    def apply(self, game_object: GameObject) -> pygame.Rect:
+        # 1. Obliczamy pozycję względem kamery w świecie (offset)
+        rel_x = game_object.x - self.offset.x
+        rel_y = game_object.y - self.offset.y
+        
+        # 2. Przesuwamy punkt odniesienia do środka ekranu, skalujemy i wracamy
+        # To sprawia, że zoom "celuje" w środek okna
+        center_x, center_y = self.width / 2, self.height / 2
+        
+        final_x = (rel_x - center_x) * self.zoom_level + center_x
+        final_y = (rel_y - center_y) * self.zoom_level + center_y
+        
+        # 3. Skalujemy również wymiary obiektu
+        final_w = game_object.width * self.zoom_level
+        final_h = game_object.height * self.zoom_level
+        
+        return pygame.Rect(final_x, final_y, final_w, final_h)
