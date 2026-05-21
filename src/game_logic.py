@@ -1,5 +1,5 @@
 from shared import GameObject, CollisionSide, CollisionInfo
-
+from shared import Vector2
 from drone import Drone
 
 """
