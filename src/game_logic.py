@@ -19,5 +19,6 @@ def check_collision(dynamic: GameObject, static: GameObject) -> CollisionInfo:
         CollisionSide.RIGHT: s_rect.right - d_rect.left,
     }
     side = min(overlaps, key=overlaps.get)
-    velocity = getattr(dynamic, 'velocity', Vector2(0, 0))
-    return CollisionInfo(True, side, static, velocity)
+    if isinstance(dynamic, Drone):
+        return CollisionInfo(True, side, static, dynamic.velocity)
+    return CollisionInfo(True, side, static, None)
