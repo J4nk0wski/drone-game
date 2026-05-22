@@ -16,6 +16,8 @@ class Window:
         self.background_image = None  # domyślnie brak tła
         #tworzy okno przy tworzeniu obiektu Window
         pygame.display.set_caption(game_name)
+        pygame.font.init()
+        self.font = pygame.font.SysFont('Consolas', 24, bold=True)
     def set_background_image(self, image_path):
         #Wczytuje zdjęcie ze ścieżki i skaluje je do rozmiaru okna
         image = pygame.image.load(image_path)
