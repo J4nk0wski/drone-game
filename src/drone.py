@@ -26,33 +26,20 @@ Atrybuty:
 jeśli zdrowie <= 0 zabiera życie i regeneruje zdrowie 
 jeśli brak żyć dron.destroyed = True
 """
-
-
 class Drone(GameObject):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
-        super().__init__(x, y, width, height, ObjectType.DRONE)
+        super().__init__(x, y, width, height, ObjectType.DRONE, None, 0, 0.1, 500, 10, 0, None, None)
         self.max_health: int = 100
         self.max_lives: int = 3
         self.destroyed: bool = False
-        self.angle: float = 0
-        self.velocity: Vector2 = Vector2(0, 0)
         self.velocity_x = 0
         self.velocity_y = 0
-        self.gravity: float = 500
         self.score: int = 0
-        self.health = self.HEALTH
-        self.lives = self.LIVES
-        #self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.img: pygame.image = None
-        #silnik lewy i prawy
+        self.health = self.max_health
+        self.lives = self.max_lives
         self.right_rotor = Rotor(width/2, x + width/2, y)
         self.left_rotor = Rotor(-width/2, x - width/2, y)
-        #obsluga silnika i obrotu drona
-        self.angular_velocity: float = 0.0          #w rad/s
-        self.inertia: float = 10   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
-        self.mass = 0.1 #nalezy zmenic
-        #możliwosc ustawienia maksymalnego kata wychylenia w radianach (None jesli moze byc dowolny)
-        self.max_angle = None
+
 
     def update_physics(self, dt: float):
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
@@ -85,7 +72,7 @@ class Drone(GameObject):
             self.lives -= 1
             if self.lives <= 0:
                 self.destroyed = True
-            self.health = self.HEALTH
+            self.health = self.max_health
     """
     Przywraca parametry drona do stanu początkowego
     Metoda przyjmuje pozycję początkową (inaczej x=0, y=0)
@@ -95,11 +82,9 @@ class Drone(GameObject):
         self.y = start_y
         self.velocity = Vector2(0, 0)
         self.gravity = 0
-        self.front_rotor_force = 0
-        self.back_rotor_force = 0
         self.score = 0
-        self.health = self.HEALTH
-        self.lives = self.LIVES
+        self.health = self.max_health
+        self.lives = self.max_lives
 
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
@@ -263,4 +248,3 @@ class Rotor:
 
     def set_force(self, force: float):
         self.force = max(0.0, min(force, self.max_force))
-
