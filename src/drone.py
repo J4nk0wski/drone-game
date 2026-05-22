@@ -40,8 +40,8 @@ class Drone(GameObject):
         self.health = self.max_health
         self.lives = self.max_lives
 
-        self.right_rotor = Rotor(width/2, x + width/2, y)
-        self.left_rotor = Rotor(-width/2, x - width/2, y)
+        self.right_rotor = Rotor(width/2, self.center_x + width/2, y)
+        self.left_rotor = Rotor(-width/2, self.center_x - width/2, y)
 
     """
     Funkcja symuluje fizykę obiektu.
