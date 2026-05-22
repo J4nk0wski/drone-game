@@ -1,5 +1,5 @@
 import pygame
-
+import math
 from shared import GameObject, ObjectType, Vector2
 
 from math import atan2, degrees
@@ -55,12 +55,51 @@ class Drone(GameObject):
         self.destroyed: bool = False
         self.angle: float = 0
         self.velocity: Vector2 = Vector2(0, 0)
-        self.gravity: float = 0
-        self.front_rotor_force: float = 0
-        self.back_rotor_force: float = 0
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.gravity: float = 500
         self.score: int = 0
         self.health = self.HEALTH
         self.lives = self.LIVES
+        #self.rect: pygame.Rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.img: pygame.image = None
+        #silnik lewy i prawy
+        self.right_rotor = Rotor(width/2, x + width/2, y)
+        self.left_rotor = Rotor(-width/2, x - width/2, y)
+        #obsluga silnika i obrotu drona
+        self.angular_velocity: float = 0.0          #w rad/s
+        self.inertia: float = 10   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
+        self.mass = 0.1 #nalezy zmenic
+        #możliwosc ustawienia maksymalnego kata wychylenia w radianach (None jesli moze byc dowolny)
+        self.max_angle = None
+
+    def update_physics(self, dt: float):
+        torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
+        total_lift = self.right_rotor.force + self.left_rotor.force
+
+        k = 10
+        ax = k *(math.sin(self.angle) * total_lift) / self.mass
+        ay = k * (-math.cos(self.angle) * total_lift) / self.mass + self.gravity
+
+        #opor powietrza
+        self.velocity_x *= 0.99
+        self.angular_velocity *= 0.90
+
+        self.velocity_x += ax * dt
+        self.velocity_y += ay * dt
+
+        angular_acc = torque / self.inertia
+        self.angular_velocity += angular_acc * dt
+        self.angle += self.angular_velocity * dt
+
+        if self.max_angle != None:
+            self.angle = max(-self.max_angle, min(self.max_angle, self.angle))
+            self.angle += self.angular_velocity * dt
+
+        self.x += self.velocity_x * dt
+        self.y += self.velocity_y * dt
+        
+
 
     def create_image(self, file_dir: str) -> None:
         self.img = create_image_function(file_dir, self.width, self.height)
@@ -289,7 +328,7 @@ dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
 
 --------/copy_image_original/--------
 zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
-
+"""
 
 def create_image_function(file_dir: str, width: float, height: float) -> pygame.Surface:
     original_img = pygame.image.load(file_dir).convert_alpha()
@@ -309,6 +348,7 @@ def copy_image_function(image: pygame.Surface, width: float, height: float) -> p
 
 def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface, float, float]:
     return image, image.get_width(), image.get_height()
+"""
 --------/tilt/--------
 Oblicza nachylenie z prędkości pocisku.
 """
@@ -326,7 +366,29 @@ class Bullet(GameObject):
         if self.velocity.x == 0 and self.velocity.y == 0:
             return
 
+        original_img = pygame.image.load(file_dir)
+        scaled_img = pygame.transform.scale(original_img,(width, height))
+        self.img = scaled_img
+        self.rect = scaled_img.get_rect()
+
+class Rotor:
+    def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
+        self.offset: float = offset_x   # odległość od środka drona (dodatnia w prawo, ujemna w lewo)
+        self.force: float = 0.0            # siła ciągu (zawsze >= 0)
+        self.size: int = size
+        self.x = x_pos                #pozycja silnika
+        self.y = y_pos
+        self.max_force = 10
+    
+    def set_force(self, force: float):
+        self.force = max(0.0, min(force, self.max_force))
+
+"""
+    def set_force(self, force: float) -> None:
+        #Ustawia siłę silnika (nie może być ujemna)
+        self.force = max(0.0, force)
         angle_rad = atan2(self.velocity.y, self.velocity.x)
         angle_deg = degrees(angle_rad)
 
         self.angle = -angle_deg
+"""
