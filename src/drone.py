@@ -2,7 +2,7 @@ import pygame
 import math
 from shared import GameObject, ObjectType, Vector2
 
-from math import atan2, degrees
+from math import atan2, degrees, radians, sin, cos
 """
 klasa drona którym można sterować
 
@@ -262,7 +262,7 @@ dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
 zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
 """
 class Enemy(GameObject):
-    def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000) -> None:
+    def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000, bullet_speed: float=7) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
         self.angle: float = 0
         #czas w milisekundach
@@ -271,6 +271,7 @@ class Enemy(GameObject):
 
         self.reloading: bool = False
         self.bullets: list[Bullet] = []
+        self.bullet_speed: float = bullet_speed
 
     """
     Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
@@ -298,6 +299,11 @@ class Enemy(GameObject):
             self.reload_timer = pygame.time.get_ticks()
             self.reloading = True
             #TO DO strzelanie pociskiem
+            end_pos = dron.center
+            start_pos = self.center
+            diff_pos = end_pos - start_pos
+            new_bullet = Bullet(self.center_x, self.center_y, self.tilt(diff_pos), self.bullet_speed)
+            self.bullets.append(new_bullet)
         else:
             self.reload()
 
@@ -309,6 +315,46 @@ class Enemy(GameObject):
             current_time = pygame.time.get_ticks()
             if current_time - self.reload_timer >= self.reload_time:
                 self.reloading = False
+
+    """
+    Oblicza nachylenie.
+    """
+    @staticmethod
+    def tilt(dist: Vector2) -> float:
+        angle_rad = atan2(dist.y, dist.x)
+        angle_deg = degrees(angle_rad)
+
+        return  -angle_deg
+
+    def update_bullets(self, dron: Drone, objects: list[GameObject], screen_width: int = 800, screen_height: int = 600) -> None:
+        """
+        Aktualizuje pozycję pocisków i obsługuje kolizje.
+        Usuwa pociski, które trafiły w przeszkodę, drona lub wyleciały poza ekran.
+        """
+        for bullet in reversed(self.bullets):
+            bullet.update_pos()
+
+            hit_something = False
+
+            for obj in objects:
+                if obj == self or obj.object_type == ObjectType.BULLET:
+                    continue
+
+                if bullet.rect.colliderect(obj.rect):
+                    hit_something = True
+                    break
+
+            if bullet.rect.colliderect(dron.rect):
+                dron.health -= 30
+                dron.health_check()
+                hit_something = True
+
+            if (bullet.x < 0 or bullet.x > screen_width or
+                    bullet.y < 0 or bullet.y > screen_height):
+                hit_something = True
+
+            if hit_something:
+                self.bullets.remove(bullet)
 
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
@@ -353,18 +399,23 @@ def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface,
 Oblicza nachylenie z prędkości pocisku.
 """
 class Bullet(GameObject):
-    def __init__(self, x: float = 0, y: float = 0, vel_x: float=0, vel_y: float=0) -> None:
+    def __init__(self, x: float, y: float, angle: float, speed: float) -> None:
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
-        self.velocity: Vector2 = Vector2(vel_x, vel_y)
-        self.angle: float = 0
-        self.tilt()
+        self.speed = speed
+        self.angle: float = angle
+        self.velocity: Vector2 = self.calculate_velocity_from_angle()
 
     """
-    Oblicza nachylenie z prędkości pocisku.
+    Oblicza składowe wektora prędkości X i Y na podstawie kąta dopasowanego do Pygame
+    oraz zadanej prędkości (speed).
     """
-    def tilt(self):
-        if self.velocity.x == 0 and self.velocity.y == 0:
-            return
+    def calculate_velocity_from_angle(self) -> Vector2:
+        standard_angle_deg = -self.angle
+        angle_rad = radians(standard_angle_deg)
+        vel_x = cos(angle_rad) * self.speed
+        vel_y = sin(angle_rad) * self.speed
+        return Vector2(vel_x, vel_y)
+
 
         original_img = pygame.image.load(file_dir)
         scaled_img = pygame.transform.scale(original_img,(width, height))
@@ -392,3 +443,4 @@ class Rotor:
 
         self.angle = -angle_deg
 """
+
