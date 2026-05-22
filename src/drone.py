@@ -57,7 +57,7 @@ class Drone(GameObject):
         self.velocity: Vector2 = Vector2(0, 0)
         self.velocity_x = 0
         self.velocity_y = 0
-        self.gravity: float = 5
+        self.gravity: float = 500
         self.score: int = 0
         self.health = self.HEALTH
         self.lives = self.LIVES
@@ -68,15 +68,22 @@ class Drone(GameObject):
         self.left_rotor = Rotor(-width/2, x - width/2, y)
         #obsluga silnika i obrotu drona
         self.angular_velocity: float = 0.0          #w rad/s
-        self.inertia: float = (width ** 2) / 12.0   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
-        self.mass = 1 #nalezy zmenic
+        self.inertia: float = 10   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
+        self.mass = 0.1 #nalezy zmenic
+        #możliwosc ustawienia maksymalnego kata wychylenia w radianach (None jesli moze byc dowolny)
+        self.max_angle = None
 
     def update_physics(self, dt: float):
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
         total_lift = self.right_rotor.force + self.left_rotor.force
 
-        ax = (-math.sin(self.angle) * total_lift) / self.mass
-        ay = (-math.cos(self.angle) * total_lift) / self.mass + self.gravity
+        k = 10
+        ax = k *(math.sin(self.angle) * total_lift) / self.mass
+        ay = k * (-math.cos(self.angle) * total_lift) / self.mass + self.gravity
+
+        #opor powietrza
+        self.velocity_x *= 0.99
+        self.angular_velocity *= 0.90
 
         self.velocity_x += ax * dt
         self.velocity_y += ay * dt
@@ -85,11 +92,14 @@ class Drone(GameObject):
         self.angular_velocity += angular_acc * dt
         self.angle += self.angular_velocity * dt
 
+        if self.max_angle != None:
+            self.angle = max(-self.max_angle, min(self.max_angle, self.angle))
+            self.angle += self.angular_velocity * dt
+
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
-
-
         
+
 
     def create_image(self, file_dir: str) -> None:
         self.img = create_image_function(file_dir, self.width, self.height)
