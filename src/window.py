@@ -1,11 +1,16 @@
 import pygame
 from shared import Vector2, GameObject
 
+
 class Window:
 #ustawia domyslny rozmiar okna na 1280x720 i nazwe gry na GAME 
     def __init__(self, size=(1280,720), game_name="Game"):
         self.screen_size = size
         self.screen = pygame.display.set_mode(size)
+        #ustawia domyślnie 60 fps
+        self.clock = pygame.Clock()  
+        self.fps = 60
+        self.image_rects = []
         self.color = (255, 255, 255)
         self.rectangles = []
         self.background_image = None  # domyślnie brak tła
@@ -30,6 +35,19 @@ class Window:
     def add_rectangle(self, rectangle):
         self.rectangles.append(rectangle)
     
+    def add_image_rect(self, image_path: str, rectangle: pygame.Rect):
+        """
+        Wczytuje zdjęcie ze ścieżki, skaluje je do rozmiaru podanego Rect
+        i dodaje do listy renderowanych obiektów.
+        Rect nadal może być używany jako hitbox — jest przechowywany razem ze zdjęciem.
+
+        Zwraca indeks dodanego elementu (przydatne do późniejszego usunięcia).
+        """
+        image = pygame.image.load(image_path).convert_alpha()
+        scaled_image = pygame.transform.scale(image, (rectangle.width, rectangle.height))
+        self.image_rects.append((scaled_image, rectangle))
+        return len(self.image_rects) - 1
+
     #rysuje obiekty typu rect na ekrannie
     def draw_rect(self, rectangle):
         pygame.draw.rect(self.screen, (105, 194, 245), rectangle)
@@ -62,6 +80,30 @@ class Window:
             # Obwódka
             pygame.draw.rect(self.screen, color_border, bg_rect, width=2, border_radius=4)
 
+    def draw_text(self, text: str, pos: tuple, font_size: int = 24, color: tuple = (0, 0, 0), font_path: str = None, centered: bool = False):
+        font = pygame.font.Font(font_path, font_size)
+        surface = font.render(text, True, color)
+        
+        if centered:
+            rect = surface.get_rect(center=pos)
+        else:
+            rect = surface.get_rect(topleft=pos)
+        
+        self.screen.blit(surface, rect)
+
+
+    def set_fps(self, fps: int):
+        #Ustawia limit klatek na sekundę
+        self.fps = fps
+
+    def tick(self):
+        #Wywołaj raz na końcu każdej iteracji pętli gry.
+        self.clock.tick(self.fps)
+
+    def get_fps(self):
+        #Zwraca aktualne FPS
+        return self.clock.get_fps()
+
     #zmienia kolor tla oraz dodaje obiekty rect na ekran
     #mozna zmienic w zaleznosci od potrzeb
     def render(self):
@@ -72,7 +114,18 @@ class Window:
 
         for rectangle in self.rectangles:
             self.draw_rect(rectangle)
+        for image, rect in self.image_rects:
+            self.screen.blit(image, rect)
 
+"""
+Jak uzywac window.render() window.update() oraz window.tick() w petli gry:
+    while running:
+    # logika gry...
+    window.render()
+    window.update()
+    window.tick() ← na samym końcu
+"""
+    
 
 """
 KAAAMEEEERAAAA
