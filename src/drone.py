@@ -73,6 +73,18 @@ class Drone(GameObject):
         self.pos.y += self.velocity.y * dt
 
     """
+    zwraca sily jakie musza miec silniki tak aby dron pozostawal w rownowadze
+    """
+    def balance_state(self) -> tuple[float, float]:
+        cos_angle = cos(self.angle)
+        if abs(cos_angle) < 1e-6:
+            raise ValueError("Kat nachylenia jest zbyt duzy")
+        k = 10
+        total_lift = (self.gravity * self.mass) / (k * cos_angle)
+        force = total_lift / 2
+        return force, force
+
+    """
     Aktualizuje informacje na temat zdrowia.
     """
     def health_check(self) -> None:
