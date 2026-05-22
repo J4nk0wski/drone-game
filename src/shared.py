@@ -99,7 +99,7 @@ Metody/gettery:
 - center - zwraca współżędne środka w postaci wektora (x, y)
 """
 class GameObject:
-    def __init__(self, x: float, y: float, width: float, height: float, object_type: ObjectType, velocity: Vector2 | None = None, angular_velocity: float = 0, mass: float = 0, gravity: float = 0, inertia: float = 0, img: pygame.Surface | None = None):
+    def __init__(self, x: float, y: float, width: float, height: float, object_type: ObjectType, velocity: Vector2 | None = None, angular_velocity: float = 0, mass: float = 0, gravity: float = 0, inertia: float = 0, angle: float = 0, max_angle: float | None = None, img: pygame.Surface | None = None):
         self.x: float= x
         self.y: float= y
         self.width: float = width
@@ -110,7 +110,8 @@ class GameObject:
         self.angular_velocity: float = angular_velocity
         self.inertia: float = inertia
         self.mass: float = mass
-        self.max_angle = None
+        self.angle: float = angle
+        self.max_angle: float| None = max_angle
         self.img: pygame.Surface | None = img
 
     @property
