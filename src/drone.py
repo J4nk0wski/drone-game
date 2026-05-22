@@ -43,7 +43,7 @@ class Drone(GameObject):
         self.right_rotor = Rotor(width/2, x + width/2, y)
         self.left_rotor = Rotor(-width/2, x - width/2, y)
 
-    def update_physics(self, dt: float):
+    def update_physics(self, dt: float) -> None:
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
         total_lift = self.right_rotor.force + self.left_rotor.force
 
@@ -127,7 +127,6 @@ Klasa dziedziczy po GameObject
 class Enemy(GameObject):
     def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000, bullet_speed: float=7) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
-        self.angle: float = 0
         #czas w milisekundach
         self.reload_time: int = reload_time
         self.reload_timer: float = 0
