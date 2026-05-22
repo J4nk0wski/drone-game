@@ -11,7 +11,7 @@ class Window:
         self.clock = pygame.Clock()  
         self.fps = 60
         self.image_rects = []
-        self.color = (255, 255, 255)
+        self.color = Color.WHITE
         self.rectangles = []
         self.background_image = None  # domyślnie brak tła
         #tworzy okno przy tworzeniu obiektu Window
@@ -24,7 +24,7 @@ class Window:
         self.background_image = pygame.transform.scale(image, self.screen_size)
 
     #zmiana koloru tla (domyslnie ustawiony na bialy)
-    def change_background_color(self, new_color=(255, 255, 255)):
+    def change_background_color(self, new_color=Color.WHITE):
         self.color = new_color
     
     #odswiza ekran- metode nalezy wywolac po kazdym przejsciu w petli
