@@ -188,7 +188,7 @@ def main():
             pygame.draw.rect(game_window.screen, Color.RED, drone_cam)
 
         # UI
-        health_pct = max(0.0, player_drone.health / player_drone.HEALTH)
+        health_pct = max(0.0, player_drone.health / player_drone.max_health)
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
         # POPRAWKA: Rzutowanie na int w szerokości paska!
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
