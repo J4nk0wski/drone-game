@@ -98,14 +98,19 @@ Metody/gettery:
 - center_y zwraca współżędną y środka obiektu
 - center - zwraca współżędne środka w postaci wektora (x, y)
 """
-
 class GameObject:
-    def __init__(self, x: int, y: int, width: int, height: int, object_type: ObjectType, img: pygame.Surface | None = None):
+    def __init__(self, x: int, y: int, width: int, height: int, object_type: ObjectType, velocity: Vector2 | None = None, angular_velocity: float = 0, mass: float = 0, gravity: float = 0, inertia: float = 0, img: pygame.Surface | None = None):
         self.x: float= x
         self.y: float= y
         self.width: float = width
         self.height: float = height
         self.object_type: ObjectType = object_type
+        self.velocity: Vector2 | None = velocity
+        self.gravity: float = gravity
+        self.angular_velocity: float = angular_velocity
+        self.inertia: float = inertia
+        self.mass: float = mass
+        self.max_angle = None
         self.img: pygame.Surface | None = img
 
     @property
