@@ -6,17 +6,9 @@ from math import atan2, degrees, radians, sin, cos
 """
 klasa drona którym można sterować
 
-Stałe klasowe:
-- HEALTH - zdrowie = 100
-- LIVES - życia = 3
+Dziedziczy po GameObject 
 
 Atrybuty:
-- x - pozycja (lewy górny róg) w poziomie (float)
-- y - pozycja (lewy górny róg) w pionie (float)
-- width - szerokość obiektu (float)
-- height - wysokość obiektu (float)
-- rect - Rect drona
-- object_type - rodzaj obiektu w grze (Enum)
 - destroyed - zmienna określająca czy obiekt jest zniszczony (bool)
 - angle - przechylenie drona (początkowo 0)
 - velocity - prędkości w kierynkach poziomym i pionowym wyrażone jako wektor (Vector2)
@@ -27,18 +19,8 @@ Atrybuty:
 - img - grafika drona
 - health - zdrowie
 - lives - życia
-
---------/create_image/--------
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+- max_health - zdrowie (domyślnie 100)
+- max_lives - życia (domyślnie 3)
 
 --------/health_check/--------
 jeśli zdrowie <= 0 zabiera życie i regeneruje zdrowie 
@@ -47,11 +29,10 @@ jeśli brak żyć dron.destroyed = True
 
 
 class Drone(GameObject):
-    HEALTH = 100
-    LIVES = 3
-
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.DRONE)
+        self.max_health: int = 100
+        self.max_lives: int = 3
         self.destroyed: bool = False
         self.angle: float = 0
         self.velocity: Vector2 = Vector2(0, 0)
