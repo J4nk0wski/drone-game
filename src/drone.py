@@ -78,6 +78,7 @@ class Drone(GameObject):
             if self.lives <= 0:
                 self.destroyed = True
             self.health = self.max_health
+
     """
     Przywraca parametry drona do stanu początkowego
     Metoda przyjmuje pozycję początkową (inaczej x=0, y=0)
@@ -86,7 +87,7 @@ class Drone(GameObject):
         self.x = start_x
         self.y = start_y
         self.velocity = Vector2(0, 0)
-        self.gravity = 0
+        self.angular_velocity = 0
         self.score = 0
         self.health = self.max_health
         self.lives = self.max_lives
