@@ -217,8 +217,8 @@ class Enemy(GameObject):
                 dron.health_check()
                 hit_something = True
 
-            if (bullet.x < 0 or bullet.x > screen_width or
-                    bullet.y < 0 or bullet.y > screen_height):
+            if (bullet.pos.x < 0 or bullet.pos.x > screen_width or
+                    bullet.pos.y < 0 or bullet.pos.y > screen_height):
                 hit_something = True
 
             if hit_something:
@@ -246,6 +246,13 @@ class Bullet(GameObject):
         vel_x = cos(angle_rad) * self.speed
         vel_y = sin(angle_rad) * self.speed
         return Vector2(vel_x, vel_y)
+
+    """
+        Aktualizuje pozycję obiektu na podstawie jego prędkości.
+    """
+    def update_pos(self) -> None:
+        self.pos.x += self.velocity.x
+        self.pos.y += self.velocity.y
 
 class Rotor:
     def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):

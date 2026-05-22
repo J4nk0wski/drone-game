@@ -100,8 +100,7 @@ Metody/gettery:
 """
 class GameObject:
     def __init__(self, x: float, y: float, width: float, height: float, object_type: ObjectType):
-        self.x: float= x
-        self.y: float= y
+        self.pos: Vector2 = Vector2(x, y)
         self.width: float = width
         self.height: float = height
         self.object_type: ObjectType = object_type
@@ -115,31 +114,31 @@ class GameObject:
         self.img: pygame.Surface | None = None
 
     @property
-    def rect(self): return pygame.Rect(self.x, self.y, self.width, self.height)
+    def rect(self): return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
 
     @property
     def left(self):
-        return self.x
+        return self.pos.x
     
     @property
     def right(self):
-        return self.x + self.width
+        return self.pos.x + self.width
 
     @property
     def top(self):
-        return self.y
+        return self.pos.y
     
     @property
     def bottom(self):
-        return self.y + self.height
+        return self.pos.y + self.height
     
     @property
     def center_x(self):
-        return self.x + self.width / 2
+        return self.pos.x + self.width / 2
     
     @property
     def center_y(self):
-        return self.y + self.height / 2
+        return self.pos.y + self.height / 2
 
     @property
     def center(self):
