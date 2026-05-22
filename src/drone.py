@@ -10,13 +10,9 @@ Klasa dziedziczy po GameObject
 
 Atrybuty:
 - destroyed - zmienna określająca czy obiekt jest zniszczony (bool)
-- angle - przechylenie drona (początkowo 0)
-- velocity - prędkości w kierynkach poziomym i pionowym wyrażone jako wektor (Vector2)
-- gravity - wartość grawitacji drona
 - front_rotor_force - siła przedniego rotora (początkowo 0)
 - back_rotor_force - siła tylniego rotora (początkowo 0) 
 - score - zdobyte punkty (początkowo 0)
-- img - grafika drona
 - health - zdrowie
 - lives - życia
 - max_health - zdrowie (domyślnie 100)
@@ -32,6 +28,7 @@ class Drone(GameObject):
         self.destroyed: bool = False
         self.max_lives: int = 3
         self.max_health: int = 100
+
         self.mass = 0.1
         self.inertia = 10
         self.gravity = 500
@@ -39,15 +36,12 @@ class Drone(GameObject):
         self.angle = 0
         self.velocity = Vector2(0, 0)
 
-
         self.score: int = 0
         self.health = self.max_health
         self.lives = self.max_lives
 
         self.right_rotor = Rotor(width/2, x + width/2, y)
         self.left_rotor = Rotor(-width/2, x - width/2, y)
-        self.velocity_x = 0
-        self.velocity_y = 0
 
     def update_physics(self, dt: float):
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
@@ -58,23 +52,26 @@ class Drone(GameObject):
         ay = k * (-math.cos(self.angle) * total_lift) / self.mass + self.gravity
 
         #opor powietrza
-        self.velocity_x *= 0.99
+        self.velocity.x *= 0.99
         self.angular_velocity *= 0.90
 
-        self.velocity_x += ax * dt
-        self.velocity_y += ay * dt
+        self.velocity.x += ax * dt
+        self.velocity.y += ay * dt
 
         angular_acc = torque / self.inertia
         self.angular_velocity += angular_acc * dt
         self.angle += self.angular_velocity * dt
 
-        if self.max_angle != None:
+        if not self.max_angle is None:
             self.angle = max(-self.max_angle, min(self.max_angle, self.angle))
             self.angle += self.angular_velocity * dt
 
-        self.x += self.velocity_x * dt
-        self.y += self.velocity_y * dt
+        self.x += self.velocity.x * dt
+        self.y += self.velocity.y * dt
 
+    """
+    Aktualizuje informacje na temat zdrowia.
+    """
     def health_check(self) -> None:
         if self.health <= 0:
             self.lives -= 1
@@ -119,8 +116,7 @@ Klasa dziedziczy po GameObject
 """
 class Obstacle(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
-        super().__init__(x, y, width, height, ObjectType.OBSTACLE, None, 0,0)
-        self.angle: float = 0
+        super().__init__(x, y, width, height, ObjectType.OBSTACLE)
 
 """
 Klasa statycznego przeciwnika, który strzela.
