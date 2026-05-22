@@ -98,32 +98,15 @@ Metody/gettery:
 - center_y zwraca współżędną y środka obiektu
 - center - zwraca współżędne środka w postaci wektora (x, y)
 """
-@dataclass
+
 class GameObject:
-    x: float
-    y: float
-    width: float
-    height: float
-    object_type: ObjectType
-
-    img: pygame.Surface = None
-
-    def create_image(self, file_dir: str) -> None:
-        original_img = pygame.image.load(file_dir).convert_alpha()
-        self.img = pygame.transform.scale(original_img, (int(self.width), int(self.height)))
-
-    def create_image_original(self, file_dir: str) -> None:
-        img = pygame.image.load(file_dir).convert_alpha()
-        self.img = img
-        self.width, self.height = img.get_size()
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = pygame.transform.scale(image, (int(self.width), int(self.height)))
-
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img = image
-        self.width, self.height = image.get_size()
+    def __init__(self, x: int, y: int, width: int, height: int, object_type: ObjectType, img: pygame.Surface | None = None):
+        self.x: float= x
+        self.y: float= y
+        self.width: float = width
+        self.height: float = height
+        self.object_type: ObjectType = object_type
+        self.img: pygame.Surface | None = img
 
     @property
     def rect(self): return pygame.Rect(self.x, self.y, self.width, self.height)
@@ -155,6 +138,23 @@ class GameObject:
     @property
     def center(self):
         return Vector2(self.center_x, self.center_y)
+
+    def create_image(self, file_dir: str) -> None:
+        original_img = pygame.image.load(file_dir).convert_alpha()
+        self.img = pygame.transform.scale(original_img, (int(self.width), int(self.height)))
+
+    def create_image_original(self, file_dir: str) -> None:
+        img = pygame.image.load(file_dir).convert_alpha()
+        self.img = img
+        self.width, self.height = img.get_size()
+
+    def copy_image(self, image: pygame.Surface) -> None:
+        self.img = pygame.transform.scale(image, (int(self.width), int(self.height)))
+
+
+    def copy_image_original(self, image: pygame.Surface) -> None:
+        self.img = image
+        self.width, self.height = image.get_size()
 
 """
 klasa przechowuje dane kolizji obiektu dynamicznego ze statycznym
