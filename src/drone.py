@@ -48,8 +48,8 @@ jeśli brak żyć dron.destroyed = True
 class Drone(GameObject):
     HEALTH = 100
     LIVES = 3
-
-    def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
+    
+    def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
         super().__init__(x, y, width, height, ObjectType.DRONE)
         self.destroyed: bool = False
         self.angle: float = 0
