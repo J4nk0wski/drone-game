@@ -57,7 +57,7 @@ class Drone(GameObject):
         self.velocity: Vector2 = Vector2(0, 0)
         self.velocity_x = 0
         self.velocity_y = 0
-        self.gravity: float = 500
+        self.gravity: float = 250
         self.score: int = 0
         self.health = self.HEALTH
         self.lives = self.LIVES
@@ -68,8 +68,8 @@ class Drone(GameObject):
         self.left_rotor = Rotor(-width/2, x - width/2, y)
         #obsluga silnika i obrotu drona
         self.angular_velocity: float = 0.0          #w rad/s
-        self.inertia: float = 10   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
-        self.mass = 0.1 #nalezy zmenic
+        self.inertia: float = 20   #moment bezwladnosci (mozna zmienic w zaleznosci od potrzeb)
+        self.mass = 0.2 #nalezy zmenic
         #możliwosc ustawienia maksymalnego kata wychylenia w radianach (None jesli moze byc dowolny)
         self.max_angle = None
 
@@ -99,7 +99,15 @@ class Drone(GameObject):
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
 
-
+    #zwraca sily jakie musza miec silniki tak aby dron pozostawal w rownowadze
+    def balance_state(self) -> tuple[float, float]:
+        cos_angle = math.cos(self.angle)
+        if abs(cos_angle) < 1e-6:
+            raise ValueError("Kat nachylenia jest zbyt duzy")
+        k = 10
+        total_lift = (self.gravity * self.mass) / (k * cos_angle)
+        force = total_lift / 2
+        return (force, force)
 
     def create_image(self, file_dir: str) -> None:
         self.img = create_image_function(file_dir, self.width, self.height)
