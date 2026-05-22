@@ -4,9 +4,8 @@ import math
 from drone import Drone
 from shared import GameObject, ObjectType, Color
 from game_logic import check_collision
-from window import Window, Camera
+from window import Window, Camera, show_game_over_screen
 from world import World
-import renderer
 
 
 def main():
@@ -201,7 +200,7 @@ def main():
         )
 
         if is_game_over:
-            renderer.show_game_over_screen(game_window, player_drone, game_world.start_x, game_world.start_y)
+            show_game_over_screen(game_window, player_drone, game_world.start_x, game_world.start_y)
             if not player_drone.destroyed:
                 is_game_over = False
         elif is_game_won:
