@@ -248,11 +248,14 @@ class Bullet(GameObject):
         return Vector2(vel_x, vel_y)
 
     """
-        Aktualizuje pozycję obiektu na podstawie jego prędkości.
+    Aktualizuje pozycję obiektu na podstawie jego prędkości.
     """
     def update_pos(self) -> None:
         self.pos += self.velocity
 
+"""
+Klasa Rotora przeznaczona do użytku w klasie Drone.
+"""
 class Rotor:
     def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
         self.offset: float = offset_x   # odległość od środka drona (dodatnia w prawo, ujemna w lewo)
@@ -262,5 +265,8 @@ class Rotor:
         self.y = y_pos
         self.max_force = 10
 
+    """
+    Ustawianie wartości w podanych przedziałach.
+    """
     def set_force(self, force: float):
         self.force = max(0.0, min(force, self.max_force))
