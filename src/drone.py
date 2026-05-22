@@ -194,11 +194,12 @@ class Enemy(GameObject):
 
         return  -angle_deg
 
+    """
+    Aktualizuje pozycję pocisków i obsługuje kolizje.
+    Usuwa pociski, które trafiły w przeszkodę, drona lub wyleciały poza ekran.
+    """
     def update_bullets(self, dron: Drone, objects: list[GameObject], screen_width: int = 800, screen_height: int = 600) -> None:
-        """
-        Aktualizuje pozycję pocisków i obsługuje kolizje.
-        Usuwa pociski, które trafiły w przeszkodę, drona lub wyleciały poza ekran.
-        """
+
         for bullet in reversed(self.bullets):
             bullet.update_pos()
 
@@ -233,7 +234,7 @@ class Bullet(GameObject):
     def __init__(self, x: float, y: float, angle: float, speed: float) -> None:
         super().__init__(x, y, 10, 10, ObjectType.BULLET)
         self.speed = speed
-        self.angle: float = angle
+        self.angle = angle
         self.velocity: Vector2 = self.calculate_velocity_from_angle()
 
     """
