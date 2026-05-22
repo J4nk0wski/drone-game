@@ -28,18 +28,26 @@ jeśli brak żyć dron.destroyed = True
 """
 class Drone(GameObject):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
-        super().__init__(x, y, width, height, ObjectType.DRONE, None, 0, 0.1, 500, 10, 0, None, None)
-        self.max_health: int = 100
-        self.max_lives: int = 3
+        super().__init__(x, y, width, height, ObjectType.DRONE)
         self.destroyed: bool = False
-        self.velocity_x = 0
-        self.velocity_y = 0
+        self.max_lives: int = 3
+        self.max_health: int = 100
+        self.mass = 0.1
+        self.inertia = 10
+        self.gravity = 500
+        self.angular_velocity = 0
+        self.angle = 0
+        self.velocity = Vector2(0, 0)
+
+
         self.score: int = 0
         self.health = self.max_health
         self.lives = self.max_lives
+
         self.right_rotor = Rotor(width/2, x + width/2, y)
         self.left_rotor = Rotor(-width/2, x - width/2, y)
-
+        self.velocity_x = 0
+        self.velocity_y = 0
 
     def update_physics(self, dt: float):
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
@@ -111,7 +119,7 @@ Klasa dziedziczy po GameObject
 """
 class Obstacle(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
-        super().__init__(x, y, width, height, ObjectType.OBSTACLE)
+        super().__init__(x, y, width, height, ObjectType.OBSTACLE, None, 0,0)
         self.angle: float = 0
 
 """
