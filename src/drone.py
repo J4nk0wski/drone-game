@@ -69,8 +69,8 @@ class Drone(GameObject):
             self.angle = max(-self.max_angle, min(self.max_angle, self.angle))
             self.angle += self.angular_velocity * dt
 
-        self.x += self.velocity.x * dt
-        self.y += self.velocity.y * dt
+        self.pos.x += self.velocity.x * dt
+        self.pos.y += self.velocity.y * dt
 
     """
     Aktualizuje informacje na temat zdrowia.
@@ -87,8 +87,8 @@ class Drone(GameObject):
     Metoda przyjmuje pozycję początkową (inaczej x=0, y=0)
     """
     def reset(self, start_x: float=0, start_y: float=0) -> None:
-        self.x = start_x
-        self.y = start_y
+        self.pos.x = start_x
+        self.pos.y = start_y
         self.velocity = Vector2(0, 0)
         self.angular_velocity = 0
         self.score = 0
