@@ -1,176 +1,219 @@
 import pygame
 import os
+import math
 from drone import Drone
 from shared import GameObject, ObjectType, Color
 from game_logic import check_collision
 from window import Window, Camera
+from world import World
 import renderer
-import math
+
 
 def main():
     pygame.init()
 
-    game_window = Window(size=(1280, 720), game_name="Drone Game")
-    game_window.change_background_color(Color.BG_NIGHT)
+    game_window = Window(size=(1280, 720), game_name="Drone Game - Level 1")
+    game_window.set_fps(60)
 
-    # Tworze kamerę
-    camera = Camera(screen_width=800, screen_height=600)
+    # Ustawienia tekstur
+    base_dir = os.path.dirname(__file__)
+    textures_dir = os.path.join(base_dir, "textures")
+    bg_path = os.path.join(textures_dir, "background_0.png")
+    drone_path = os.path.join(textures_dir, "Drone.png")
 
-    clock = pygame.time.Clock()
+    wall_texture_path = os.path.join(textures_dir, "ground_texture_0.png")
+    meta_texture_path = os.path.join(textures_dir, "ground_texture_0.png")
+    enemy_texture_path = os.path.join(textures_dir, "UGV_turret.png")
+
+    try:
+        game_window.set_background_image(bg_path)
+    except pygame.error:
+        game_window.change_background_color(Color.BG_NIGHT)
+
+    camera = Camera(screen_width=1280, screen_height=720, look_ahead=20.0, damping=0.08)
     running = True
 
-    player_drone = Drone(x=370, y=50, width=30, height=20)
-    folder_skryptu = os.path.dirname(__file__)
-    sciezka_drona = os.path.join(folder_skryptu, "dron.png")
-
-    player_drone.create_image(sciezka_drona)
-
-
-    # Poszerzam podłogę
-    floor = GameObject(x=-2000, y=550, width=4000, height=50, object_type=ObjectType.FLOOR)
-
-    # Tworze listę przeszkód
-    obstacles = [
-        GameObject(x=100, y=400, width=50, height=150, object_type=ObjectType.OBSTACLE),
-        GameObject(x=600, y=300, width=100, height=50, object_type=ObjectType.OBSTACLE),
-        GameObject(x=-300, y=200, width=200, height=40, object_type=ObjectType.OBSTACLE)
+    # Swiat
+    level_map = [
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O   S                                                                          O",
+        "O                                                                              O",
+        "O                                      E                                       O",
+        "O                                   OOOOOOO                                    O",
+        "O                                                                              O",
+        "O             E                                              E                 O",
+        "OOOOOOOOOOOOOOOOOOOOO                                  OOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O                                                                        M     O",
+        "O                                                                              O",
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
     ]
 
-    # --- FLAGA STANU GRY ---
+    game_world = World(tile_size=60)
+    game_world.load_level(level_map)
+
+    player_drone = Drone(x=game_world.start_x, y=game_world.start_y, width=64, height=32)
+    try:
+        player_drone.create_image(drone_path)
+    except pygame.error:
+        print("Nie znaleziono grafiki drona!")
+
+    try:
+        wall_img_raw = pygame.image.load(wall_texture_path).convert_alpha()
+    except pygame.error:
+        wall_img_raw = None
+
+    try:
+        meta_img_raw = pygame.image.load(meta_texture_path).convert_alpha()
+    except pygame.error:
+        meta_img_raw = None
+
+    try:
+        enemy_img_raw = pygame.image.load(enemy_texture_path).convert_alpha()
+    except pygame.error:
+        enemy_img_raw = None
+
+    floor = GameObject(x=-2000, y=2500, width=8000, height=50, object_type=ObjectType.FLOOR)
     is_game_over = False
+    is_game_won = False
 
     while running:
+        dt = 1.0 / game_window.fps
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Sterowanie
         keys = pygame.key.get_pressed()
 
-        # Szybki reset
         if keys[pygame.K_r]:
-            player_drone.x = 370
-            player_drone.y = 50
-            player_drone.velocity_x = 0
-            player_drone.velocity_y = 0
-            is_game_over = False  # Resetujemy stan gry, wyłączamy napis
+            player_drone.reset(game_world.start_x, game_world.start_y)
+            player_drone.destroyed = False
+            is_game_over = False
+            is_game_won = False
 
-
-        # Wyłączamy sterowanie silnikami, gdy gra jest przegrana
-        if not is_game_over:
+        if not is_game_over and not is_game_won:
             if keys[pygame.K_w]:
-                player_drone.left_rotor.set_force(min(player_drone.left_rotor.force + 1, player_drone.left_rotor.max_force))
+                player_drone.left_rotor.set_force(
+                    min(player_drone.left_rotor.force + 2, player_drone.left_rotor.max_force))
             if keys[pygame.K_s]:
-                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - 1, 0))
+                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - 2, 0))
             if keys[pygame.K_UP]:
-                player_drone.right_rotor.set_force(min(player_drone.right_rotor.force + 1, player_drone.right_rotor.max_force))
+                player_drone.right_rotor.set_force(
+                    min(player_drone.right_rotor.force + 2, player_drone.right_rotor.max_force))
             if keys[pygame.K_DOWN]:
-                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - 1, 0))
+                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - 2, 0))
+        else:
+            player_drone.left_rotor.set_force(0)
+            player_drone.right_rotor.set_force(0)
 
-        # Zapis pozycji
-        old_x = player_drone.x
-        old_y = player_drone.y
+        old_x, old_y = player_drone.x, player_drone.y
 
-        dt = clock.tick(60) / 1000.0
-        if not is_game_over:
+        if not is_game_over and not is_game_won:
             player_drone.update_physics(dt)
-            
-            #player_drone.velocity.x = max(-8.0, min(8.0, player_drone.velocity.x))
-            #player_drone.velocity.y = max(-10.0, player_drone.velocity.y)
+
         player_drone.rect.x = player_drone.x
         player_drone.rect.y = player_drone.y
 
-        
-        
+        # Kolizje
+        if game_world.landing_pad and check_collision(player_drone, game_world.landing_pad).collision:
+            if abs(player_drone.velocity_y) < 150 and abs(player_drone.angle) < 0.3:
+                is_game_won = True
+                player_drone.velocity_x = player_drone.velocity_y = 0
+            else:
+                player_drone.health -= 100
+                player_drone.health_check()
+                if player_drone.destroyed:
+                    is_game_over = True
 
-        # Fizyka gry
-        # Grawitacja działa tylko, gdy gra trwa
-        """
-        if not is_game_over:
-            player_drone.velocity.y += player_drone.gravity
-
-        player_drone.y += player_drone.velocity.y
-        player_drone.rect.y = player_drone.y
-
-        player_drone.x += player_drone.velocity.x
-        player_drone.rect.x = player_drone.x
-        """
-        # --- KOLIZJE Z PODŁOGĄ ---
-        collision_info = check_collision(player_drone, floor)
-        if collision_info.collision:
-            player_drone.velocity_y = 0
-            player_drone.y = floor.top - player_drone.height
-            player_drone.rect.y = player_drone.y
-
-        # Kolizje z przeszkodami
-        for obs in obstacles:
+        for obs in game_world.obstacles:
             if check_collision(player_drone, obs).collision:
-                #Przegrana
-                is_game_over = True
+                player_drone.x, player_drone.y = old_x, old_y
+                player_drone.rect.x, player_drone.rect.y = old_x, old_y
+                player_drone.velocity_x *= -0.3
+                player_drone.velocity_y *= -0.3
 
-                #Cofam drona do bezpiecznej pozycji sprzed klatki
-                player_drone.x = old_x
-                player_drone.y = old_y
-                player_drone.rect.x = old_x
-                player_drone.rect.y = old_y
+        for enemy in game_world.enemies:
+            if check_collision(player_drone, enemy).collision:
+                player_drone.x, player_drone.y = old_x, old_y
+                player_drone.rect.x, player_drone.rect.y = old_x, old_y
+                player_drone.velocity_x *= -0.3
+                player_drone.velocity_y *= -0.3
+                player_drone.health -= 15
+                player_drone.health_check()
+                if player_drone.destroyed:
+                    is_game_over = True
 
-                #Zatrzymujemy go w miejscu
-                player_drone.velocity_x = 0
-                player_drone.velocity_y = 0
+        if check_collision(player_drone, floor).collision:
+            is_game_over = True
 
-        # Kamera
         camera.update(player_drone)
 
-        #Ekran
-        if game_window.background_image:
-            game_window.screen.blit(game_window.background_image, (0, 0))
+        # Renderowanie
+        game_window.render()
+
+        if wall_img_raw:
+            scaled_wall = pygame.transform.scale(wall_img_raw, (game_world.tile_size, game_world.tile_size))
+            for obs in game_world.obstacles:
+                game_window.screen.blit(scaled_wall, camera.apply(obs))
         else:
-            game_window.screen.fill(game_window.color)
+            for obs in game_world.obstacles:
+                pygame.draw.rect(game_window.screen, Color.NEON_BLUE, camera.apply(obs))
 
-        floor_rect_cam = camera.apply(floor)
-        pygame.draw.rect(game_window.screen, Color.FOREST_GREEN, floor_rect_cam)
+        if game_world.landing_pad:
+            pad_cam_rect = camera.apply(game_world.landing_pad)
+            if meta_img_raw:
+                scaled_meta = pygame.transform.scale(meta_img_raw, (pad_cam_rect.width, pad_cam_rect.height))
+                game_window.screen.blit(scaled_meta, pad_cam_rect)
+            else:
+                pygame.draw.rect(game_window.screen, Color.GREEN, pad_cam_rect)
 
-        for i, obs in enumerate(obstacles):
-            obs_rect_cam = camera.apply(obs)
-            color = Color.NEON_PINK if i % 2 == 0 else Color.NEON_BLUE
-            pygame.draw.rect(game_window.screen, color, obs_rect_cam)
-            pygame.draw.rect(game_window.screen, Color.WHITE, obs_rect_cam, width=2)
+            game_window.draw_text("H", (pad_cam_rect.centerx, pad_cam_rect.centery), font_size=24, color=Color.WHITE, centered=True)
 
-        drone_rect_cam = camera.apply(player_drone)
+        if enemy_img_raw:
+            scaled_enemy = pygame.transform.scale(enemy_img_raw, (game_world.tile_size, game_world.tile_size))
+            for enemy in game_world.enemies:
+                game_window.screen.blit(scaled_enemy, camera.apply(enemy))
+        else:
+            for enemy in game_world.enemies:
+                pygame.draw.rect(game_window.screen, Color.RED, camera.apply(enemy))
+
+        drone_cam = camera.apply(player_drone)
         if player_drone.img:
-            scaled_img = pygame.transform.scale(player_drone.img, (int(drone_rect_cam.width), int(drone_rect_cam.height)))
-            
-            angle_deg = math.degrees(player_drone.angle)
-            rotated_img = pygame.transform.rotate(scaled_img, -angle_deg)
-            rotated_rect = rotated_img.get_rect(center=drone_rect_cam.center)
-
-            game_window.screen.blit(rotated_img, rotated_rect)
+            scaled_img = pygame.transform.scale(player_drone.img, (int(drone_cam.width), int(drone_cam.height)))
+            rotated_img = pygame.transform.rotate(scaled_img, -math.degrees(player_drone.angle))
+            game_window.screen.blit(rotated_img, rotated_img.get_rect(center=drone_cam.center))
         else:
-            pygame.draw.rect(game_window.screen, Color.RED, drone_rect_cam)
+            pygame.draw.rect(game_window.screen, Color.RED, drone_cam)
 
-        game_window.draw_engine_power(player_drone.left_rotor.force/ player_drone.left_rotor.max_force, player_drone.right_rotor.force/ player_drone.right_rotor.max_force)
+        # UI
+        health_pct = max(0.0, player_drone.health / player_drone.HEALTH)
+        pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
+        # POPRAWKA: Rzutowanie na int w szerokości paska!
+        pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
+        game_window.draw_text(f"HP: {int(player_drone.health)}", (225, 20), font_size=18, color=Color.WHITE)
+        game_window.draw_text(f"ZYCIA: {player_drone.lives}", (20, 50), font_size=24, color=Color.WHITE)
 
-        # Pokazanie tekstu koncowego
+        game_window.draw_engine_power(
+            player_drone.left_rotor.force / player_drone.left_rotor.max_force,
+            player_drone.right_rotor.force / player_drone.right_rotor.max_force
+        )
+
         if is_game_over:
-            renderer.show_game_over_screen(game_window, player_drone,)
-
-
-        """
-        Funkcje pomocnicze do wyswietlania aktualnego polozenia i kata nachylenia
-        ang_text = "Angle: " + str(round((player_drone.angle * 360) / (2 *math.pi), 1))
-        game_window.draw_text(ang_text, (100, 100), 24, (255, 255, 255))
-        x_pos_text = "x pos: " + str(round(player_drone.x, 2))
-        y_pos_text = "y pos: " + str(round(player_drone.y, 2))
-        game_window.draw_text(x_pos_text, (100, 120), 24, (255, 255, 255))
-        game_window.draw_text(y_pos_text, (100, 140), 24, (255, 255, 255))
-        """
-
+            renderer.show_game_over_screen(game_window, player_drone, game_world.start_x, game_world.start_y)
+            if not player_drone.destroyed:
+                is_game_over = False
+        elif is_game_won:
+            game_window.draw_text("MISSION COMPLETE",
+                                  (game_window.screen_size[0] // 2, game_window.screen_size[1] // 2), font_size=72,
+                                  color=Color.YELLOW, centered=True)
 
         game_window.update()
-        clock.tick(60)
+        game_window.tick()
 
     pygame.quit()
 
 
-if __name__ == "__main__":#
+if __name__ == "__main__":
     main()
