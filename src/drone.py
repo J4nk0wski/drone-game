@@ -103,7 +103,7 @@ class Drone(GameObject):
     def balance_state(self) -> tuple[float, float]:
         cos_angle = math.cos(self.angle)
         if abs(cos_angle) < 1e-6:
-            raise ValueError("Dron jest zbytnio nachylony")
+            raise ValueError("Kat nachylenia jest zbyt duzy")
         k = 10
         total_lift = (self.gravity * self.mass) / (k * cos_angle)
         force = total_lift / 2
