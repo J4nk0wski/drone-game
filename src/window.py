@@ -191,8 +191,8 @@ class Camera:
 
     def apply(self, game_object: GameObject) -> pygame.Rect:
         # 1. Obliczamy pozycję względem kamery w świecie (offset)
-        rel_x = game_object.x - self.offset.x
-        rel_y = game_object.y - self.offset.y
+        rel_x = game_object.pos.x - self.offset.x
+        rel_y = game_object.pos.y - self.offset.y
         
         # 2. Przesuwamy punkt odniesienia do środka ekranu, skalujemy i wracamy
         # To sprawia, że zoom "celuje" w środek okna
