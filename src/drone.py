@@ -6,7 +6,7 @@ from math import atan2, degrees, radians, sin, cos
 """
 klasa drona którym można sterować
 
-Dziedziczy po GameObject 
+Klasa dziedziczy po GameObject 
 
 Atrybuty:
 - destroyed - zmienna określająca czy obiekt jest zniszczony (bool)
@@ -103,130 +103,36 @@ class Drone(GameObject):
 
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
-Atrybuty/gettery:
-- x - pozycja (lewy górny róg) w poziomie (float)
-- y - pozycja (lewy górny róg) w pionie (float)
-- width - szerokość obiektu (float)
-- height - wysokość obiektu (float)
-- rect - Rect podłogi (pygame.Rect)
-- left - pozycja lewego boku (float)
-- right - pozycja prawego boku (float)
-- top - pozycja górnej krawędzi (float)
-- bottom - pozycja dolnej krawędzi (float)
-- center_x - środek w poziomie (float)
-- center_y - środek w pionie (float)
-- center - środek (Vector2)
-- img - grafika podłogi (pygame.Surface)
 
---------/create_image/--------
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+Klasa dziedziczy po GameObject 
 """
-
-
 class Floor(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
         super().__init__(x, y, width, height, ObjectType.FLOOR)
 
-
 """
 Klasa ściany. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla ściany.
-Atrybuty/gettery:
-- x - pozycja (lewy górny róg) w poziomie (float)
-- y - pozycja (lewy górny róg) w pionie (float)
-- width - szerokość obiektu (float)
-- height - wysokość obiektu (float)
-- rect - Rect podłogi (pygame.Rect)
-- left - pozycja lewego boku (float)
-- right - pozycja prawego boku (float)
-- top - pozycja górnej krawędzi (float)
-- bottom - pozycja dolnej krawędzi (float)
-- center_x - środek w poziomie (float)
-- center_y - środek w pionie (float)
-- center - środek (Vector2)
-- img - grafika ściany (pygame.Surface)
 
---------/create_image/--------
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+Klasa dziedziczy po GameObject 
 """
-
-
 class Wall(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
         super().__init__(x, y, width, height, ObjectType.WALL)
 
 """
 Klasa przeszkody.
-Atrybuty/gettery:
-- x - pozycja (lewy górny róg) w poziomie (float)
-- y - pozycja (lewy górny róg) w pionie (float)
-- width - szerokość obiektu (float)
-- height - wysokość obiektu (float)
-- rect - Rect podłogi (pygame.Rect)
-- left - pozycja lewego boku (float)
-- right - pozycja prawego boku (float)
-- top - pozycja górnej krawędzi (float)
-- bottom - pozycja dolnej krawędzi (float)
-- center_x - środek w poziomie (float)
-- center_y - środek w pionie (float)
-- center - środek (Vector2)
-- img - grafika przeszkody (pygame.Surface)
-- angle - kąt nachylenia (float)
 
---------/create_image/--------
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+Klasa dziedziczy po GameObject 
 """
-
-
 class Obstacle(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
         super().__init__(x, y, width, height, ObjectType.OBSTACLE)
         self.angle: float = 0
 
 """
-Klasa przeciwnika, który strzela do gracza i przy trafieniu pociskiem zabiera punkty HP
+Klasa statycznego przeciwnika, który strzela.
 
---------/create_image/--------
-pobiera z pliku grafikę drona i dostosowywuje do wymiarów drona
-
---------/create_image_original/--------
-pobiera z pliku grafikę drona i zachowuje oryginalny rozmiar grafiki, nadpisuje rozmiary drona
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
+Klasa dziedziczy po GameObject 
 """
 class Enemy(GameObject):
     def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000, bullet_speed: float=7) -> None:
@@ -326,26 +232,7 @@ class Enemy(GameObject):
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
 
---------/create_image/--------
-pobiera z pliku grafikę drona i dostosowywuje do wymiarów drona
-
---------/create_image_original/--------
-pobiera z pliku grafikę drona i zachowuje oryginalny rozmiar grafiki, nadpisuje rozmiary drona
-pobiera z pliku grafikę i dostosowywuje do wymiarów klasowych
-
---------/create_image_original/--------
-pobiera z pliku grafikę i zachowuje oryginalny rozmiar grafiki, nadpisuje wyzmiary klasowe
-
---------/copy_image/--------
-dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
-
---------/copy_image_original/--------
-zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
-"""
-
-"""
---------/tilt/--------
-Oblicza nachylenie z prędkości pocisku.
+Klasa dziedziczy po GameObject
 """
 class Bullet(GameObject):
     def __init__(self, x: float, y: float, angle: float, speed: float) -> None:
@@ -365,12 +252,6 @@ class Bullet(GameObject):
         vel_y = sin(angle_rad) * self.speed
         return Vector2(vel_x, vel_y)
 
-
-        original_img = pygame.image.load(file_dir)
-        scaled_img = pygame.transform.scale(original_img,(width, height))
-        self.img = scaled_img
-        self.rect = scaled_img.get_rect()
-
 class Rotor:
     def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
         self.offset: float = offset_x   # odległość od środka drona (dodatnia w prawo, ujemna w lewo)
@@ -382,14 +263,4 @@ class Rotor:
 
     def set_force(self, force: float):
         self.force = max(0.0, min(force, self.max_force))
-
-"""
-    def set_force(self, force: float) -> None:
-        #Ustawia siłę silnika (nie może być ujemna)
-        self.force = max(0.0, force)
-        angle_rad = atan2(self.velocity.y, self.velocity.x)
-        angle_deg = degrees(angle_rad)
-
-        self.angle = -angle_deg
-"""
 
