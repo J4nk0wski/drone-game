@@ -43,6 +43,9 @@ class Drone(GameObject):
         self.right_rotor = Rotor(width/2, x + width/2, y)
         self.left_rotor = Rotor(-width/2, x - width/2, y)
 
+    """
+    Funkcja symuluje fizykę obiektu.
+    """
     def update_physics(self, dt: float) -> None:
         torque = self.right_rotor.force * self.right_rotor.offset + self.left_rotor.force * self.left_rotor.offset
         total_lift = self.right_rotor.force + self.left_rotor.force
@@ -155,15 +158,18 @@ class Enemy(GameObject):
 
         return True
 
-
+    """
+    Jeśli działo jest przeładowanie i cel wykryty to strzela.
+    """
     def shoot(self, dron: GameObject, objects: list[GameObject]):
         if not self.reloading and self.search(dron, objects):
             self.reload_timer = pygame.time.get_ticks()
             self.reloading = True
-            #TO DO strzelanie pociskiem
+
             end_pos = dron.center
             start_pos = self.center
             diff_pos = end_pos - start_pos
+
             new_bullet = Bullet(self.center_x, self.center_y, self.tilt(diff_pos), self.bullet_speed)
             self.bullets.append(new_bullet)
         else:
