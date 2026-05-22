@@ -154,13 +154,16 @@ def main():
         if is_game_over:
             renderer.show_game_over_screen(game_window, player_drone,)
 
-        ang_text = "Angle: " + str(player_drone.angle)
+
+        """
+        Funkcje pomocnicze do wyswietlania aktualnego polozenia i kata nachylenia
+        ang_text = "Angle: " + str(round((player_drone.angle * 360) / (2 *math.pi), 1))
         game_window.draw_text(ang_text, (100, 100), 24, (255, 255, 255))
-        x_pos_text = "x pos: " + str(player_drone.x)
-        y_pos_text = "y pos: " + str(player_drone.y)
+        x_pos_text = "x pos: " + str(round(player_drone.x, 2))
+        y_pos_text = "y pos: " + str(round(player_drone.y, 2))
         game_window.draw_text(x_pos_text, (100, 120), 24, (255, 255, 255))
         game_window.draw_text(y_pos_text, (100, 140), 24, (255, 255, 255))
-        
+        """
 
 
         game_window.update()
