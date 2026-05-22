@@ -80,20 +80,6 @@ class Drone(GameObject):
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
 
-
-
-    def create_image(self, file_dir: str) -> None:
-        self.img = create_image_function(file_dir, self.width, self.height)
-
-    def create_image_original(self, file_dir: str) -> None:
-        self.img, self.width, self.height = create_image_original_function(file_dir)
-
-    def copy_image(self, image: pygame.Surface) -> None:
-        self.img = copy_image_function(image, self.width, self.height)
-
-    def copy_image_original(self, image: pygame.Surface) -> None:
-        self.img, self.width, self.height = copy_image_original_function(image)
-
     def health_check(self) -> None:
         if self.health <= 0:
             self.lives -= 1
@@ -357,24 +343,6 @@ dostosowywuje do wymiarów grafikę i zapisuje ją jako swój atrybut
 zapisuje jako swój atrybut oryginalną grafikę i zmienia swoje wymiary na wymiary grafiki
 """
 
-def create_image_function(file_dir: str, width: float, height: float) -> pygame.Surface:
-    original_img = pygame.image.load(file_dir).convert_alpha()
-    img = pygame.transform.scale(original_img, (width, height))
-    return img
-
-
-def create_image_original_function(file_dir: str) -> tuple[pygame.Surface, float, float]:
-    img = pygame.image.load(file_dir).convert_alpha()
-    return img, img.get_width(), img.get_height()
-
-
-def copy_image_function(image: pygame.Surface, width: float, height: float) -> pygame.Surface:
-    img = pygame.transform.scale(image, (width, height))
-    return img
-
-
-def copy_image_original_function(image: pygame.Surface) -> tuple[pygame.Surface, float, float]:
-    return image, image.get_width(), image.get_height()
 """
 --------/tilt/--------
 Oblicza nachylenie z prędkości pocisku.
