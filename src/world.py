@@ -2,6 +2,35 @@ import pygame
 from shared import GameObject, ObjectType
 from drone import Enemy
 
+# Baza wszystkich poziomów w grze
+LEVELS = {
+    #Przykladowy poziom 1
+    1: [
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O   S                                                                          O",
+        "O                                                                              O",
+        "O                                      E                                       O",
+        "O                                   OOOOOOO                                    O",
+        "O                                                                              O",
+        "O             E                                              E                 O",
+        "OOOOOOOOOOOOOOOOOOOOO                                  OOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O                                                                        M     O",
+        "O                                                                              O",
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+    ],
+    2: [
+        # Przykładowy poziom 2
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O   S                                                                          O",
+        "O                                                                              O",
+        "O                               E               E                              O",
+        "O                            OOOOOOO         OOOOOOO                           O",
+        "O                                                                        M     O",
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+    ]
+}
 
 class World:
     def __init__(self, tile_size=60):
