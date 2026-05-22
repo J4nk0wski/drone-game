@@ -251,8 +251,7 @@ class Bullet(GameObject):
         Aktualizuje pozycję obiektu na podstawie jego prędkości.
     """
     def update_pos(self) -> None:
-        self.pos.x += self.velocity.x
-        self.pos.y += self.velocity.y
+        self.pos += self.velocity
 
 class Rotor:
     def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
