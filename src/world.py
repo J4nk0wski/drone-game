@@ -1,4 +1,3 @@
-import pygame
 from shared import GameObject, ObjectType
 from drone import Enemy
 
