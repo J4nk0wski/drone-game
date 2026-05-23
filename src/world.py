@@ -1,7 +1,35 @@
-import pygame
 from shared import GameObject, ObjectType
 from drone import Enemy
 
+# Baza wszystkich poziomów w grze
+LEVELS = {
+    #Przykladowy poziom 1
+    1: [
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O   S                                                                          O",
+        "O                                                                              O",
+        "O                                      E                                       O",
+        "O                                   OOOOOOO                                    O",
+        "O                                                                              O",
+        "O             E                                              E                 O",
+        "OOOOOOOOOOOOOOOOOOOOO                                  OOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O                                                                              O",
+        "O                                                                        M     O",
+        "O                                                                              O",
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+    ],
+    2: [
+        # Przykładowy poziom 2
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+        "O   S                                                                          O",
+        "O                                                                              O",
+        "O                               E               E                              O",
+        "O                            OOOOOOO         OOOOOOO                           O",
+        "O                                                                        M     O",
+        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+    ]
+}
 
 class World:
     def __init__(self, tile_size=60):
@@ -11,12 +39,20 @@ class World:
         self.landing_pad = None
         self.start_x = 0
         self.start_y = 0
+        self.current_level = 1
 
-    def load_level(self, level_map):
-        """Czyści poprzedni stan i buduje poziom na podstawie tablicy stringów"""
+    def load_level(self, level_id):
+        """Czyści poprzedni stan i buduje poziom na podstawie ID ze słownika LEVELS"""
         self.obstacles.clear()
         self.enemies.clear()
         self.landing_pad = None
+        self.current_level = level_id
+
+        if level_id not in LEVELS:
+            print(f"Błąd: Poziom {level_id} nie istnieje w bazie!")
+            return
+
+        level_map = LEVELS[level_id]
 
         for row_idx, row in enumerate(level_map):
             for col_idx, tile in enumerate(row):
@@ -36,5 +72,5 @@ class World:
                     self.landing_pad = GameObject(x=x, y=y + 40, width=self.tile_size * 2, height=20,
                                                   object_type=ObjectType.FLOOR)
                 elif tile == "E":
-                    #Tworzenie przeciwnika na mapie
+                    # Generowanie wieżyczki UGV
                     self.enemies.append(Enemy(x=x, y=y, reload_time=5000))

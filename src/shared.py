@@ -98,15 +98,51 @@ Metody/gettery:
 - center_y zwraca współżędną y środka obiektu
 - center - zwraca współżędne środka w postaci wektora (x, y)
 """
-@dataclass
 class GameObject:
-    x: float
-    y: float
-    width: float
-    height: float
-    object_type: ObjectType
+    def __init__(self, x: float, y: float, width: float, height: float, object_type: ObjectType):
+        self.pos: Vector2 = Vector2(x, y)
+        self.width: float = width
+        self.height: float = height
+        self.object_type: ObjectType = object_type
+        self.velocity: Vector2 = Vector2(0, 0)
+        self.gravity: float = 0
+        self.angular_velocity: float = 0
+        self.inertia: float = 0
+        self.mass: float = 0
+        self.angle: float= 0
+        self.max_angle: float| None = None
+        self.img: pygame.Surface | None = None
 
-    img: pygame.Surface = None
+    @property
+    def rect(self): return pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+
+    @property
+    def left(self):
+        return self.pos.x
+    
+    @property
+    def right(self):
+        return self.pos.x + self.width
+
+    @property
+    def top(self):
+        return self.pos.y
+    
+    @property
+    def bottom(self):
+        return self.pos.y + self.height
+    
+    @property
+    def center_x(self):
+        return self.pos.x + self.width / 2
+    
+    @property
+    def center_y(self):
+        return self.pos.y + self.height / 2
+
+    @property
+    def center(self):
+        return Vector2(self.center_x, self.center_y)
 
     def create_image(self, file_dir: str) -> None:
         original_img = pygame.image.load(file_dir).convert_alpha()
@@ -124,37 +160,6 @@ class GameObject:
     def copy_image_original(self, image: pygame.Surface) -> None:
         self.img = image
         self.width, self.height = image.get_size()
-
-    @property
-    def rect(self): return pygame.Rect(self.x, self.y, self.width, self.height)
-
-    @property
-    def left(self):
-        return self.x
-    
-    @property
-    def right(self):
-        return self.x + self.width
-
-    @property
-    def top(self):
-        return self.y
-    
-    @property
-    def bottom(self):
-        return self.y + self.height
-    
-    @property
-    def center_x(self):
-        return self.x + self.width / 2
-    
-    @property
-    def center_y(self):
-        return self.y + self.height / 2
-
-    @property
-    def center(self):
-        return Vector2(self.center_x, self.center_y)
 
 """
 klasa przechowuje dane kolizji obiektu dynamicznego ze statycznym

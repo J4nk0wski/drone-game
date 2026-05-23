@@ -4,9 +4,8 @@ import math
 from drone import Drone
 from shared import GameObject, ObjectType, Color
 from game_logic import check_collision
-from window import Window, Camera
+from window import Window, Camera, show_game_over_screen
 from world import World
-import renderer
 
 
 def main():
@@ -188,7 +187,7 @@ def main():
             pygame.draw.rect(game_window.screen, Color.RED, drone_cam)
 
         # UI
-        health_pct = max(0.0, player_drone.health / player_drone.HEALTH)
+        health_pct = max(0.0, player_drone.health / player_drone.max_health)
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
         # POPRAWKA: Rzutowanie na int w szerokości paska!
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
@@ -201,7 +200,7 @@ def main():
         )
 
         if is_game_over:
-            renderer.show_game_over_screen(game_window, player_drone, game_world.start_x, game_world.start_y)
+            show_game_over_screen(game_window, player_drone, game_world.start_x, game_world.start_y)
             if not player_drone.destroyed:
                 is_game_over = False
         elif is_game_won:
