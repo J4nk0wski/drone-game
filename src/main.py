@@ -29,28 +29,12 @@ def main():
     except pygame.error:
         game_window.change_background_color(Color.BG_NIGHT)
 
-    camera = Camera(screen_width=1280, screen_height=720, look_ahead=20.0, damping=0.08)
+    camera = Camera(screen_width=1280, screen_height=720, look_ahead=0.0, damping=0.08)
     running = True
 
-    # Swiat
-    level_map = [
-        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
-        "O                                                                              O",
-        "O   S                                                                          O",
-        "O                                                                              O",
-        "O                                      E                                       O",
-        "O                                   OOOOOOO                                    O",
-        "O                                                                              O",
-        "O             E                                              E                 O",
-        "OOOOOOOOOOOOOOOOOOOOO                                  OOOOOOOOOOOOOOOOOOOOOOOOO",
-        "O                                                                              O",
-        "O                                                                        M     O",
-        "O                                                                              O",
-        "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-    ]
-
+    # inicjalizacja swiata
     game_world = World(tile_size=60)
-    game_world.load_level(level_map)
+    game_world.load_level(1)  # Wczytywanie poziomu 1 ze słownika LEVELS
 
     player_drone = Drone(x=game_world.start_x, y=game_world.start_y, width=64, height=32)
     try:
@@ -91,35 +75,63 @@ def main():
             player_drone.destroyed = False
             is_game_over = False
             is_game_won = False
+            for enemy in game_world.enemies:
+                enemy.bullets.clear()
+
+        # Wyliczenie przyrostu siły silników na klatkę, by od 0 do 100% minęło 1.5s
+        left_force_change = (player_drone.left_rotor.max_force / 1.5) * dt
+        right_force_change = (player_drone.right_rotor.max_force / 1.5) * dt
+        
+        # Wyliczenie szybkiego przyrostu siły (od 0 do 100% w 0.5s)
+        left_force_change_fast = (player_drone.left_rotor.max_force / 0.5) * dt
+        right_force_change_fast = (player_drone.right_rotor.max_force / 0.5) * dt
 
         if not is_game_over and not is_game_won:
             if keys[pygame.K_w]:
-                player_drone.left_rotor.set_force(
-                    min(player_drone.left_rotor.force + 2, player_drone.left_rotor.max_force))
-            if keys[pygame.K_s]:
-                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - 2, 0))
-            if keys[pygame.K_UP]:
                 player_drone.right_rotor.set_force(
-                    min(player_drone.right_rotor.force + 2, player_drone.right_rotor.max_force))
+                    min(player_drone.right_rotor.force + right_force_change, player_drone.right_rotor.max_force))
+            if keys[pygame.K_s]:
+                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change, 0))
+            if keys[pygame.K_d]:
+                player_drone.right_rotor.set_force(
+                    min(player_drone.right_rotor.force + right_force_change_fast, player_drone.right_rotor.max_force))
+            if keys[pygame.K_a]:
+                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change_fast, 0))
+                
+            if keys[pygame.K_UP]:
+                player_drone.left_rotor.set_force(
+                    min(player_drone.left_rotor.force + left_force_change, player_drone.left_rotor.max_force))
             if keys[pygame.K_DOWN]:
-                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - 2, 0))
+                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - left_force_change, 0))
+            if keys[pygame.K_RIGHT]:
+                player_drone.left_rotor.set_force(
+                    min(player_drone.left_rotor.force + left_force_change_fast, player_drone.left_rotor.max_force))
+            if keys[pygame.K_LEFT]:
+                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - left_force_change_fast, 0))
         else:
             player_drone.left_rotor.set_force(0)
             player_drone.right_rotor.set_force(0)
 
-        old_x, old_y = player_drone.x, player_drone.y
+        # Zapisywanie kopii pozycji wektorowej
+        old_pos_x, old_pos_y = player_drone.pos.x, player_drone.pos.y
 
         if not is_game_over and not is_game_won:
             player_drone.update_physics(dt)
 
-        player_drone.rect.x = player_drone.x
-        player_drone.rect.y = player_drone.y
+            # Wiezyczki i pociski
+            for enemy in game_world.enemies:
+                enemy.shoot(player_drone, game_world.obstacles)
+                # granice 8000,8000 po to aby pociski lecilay przez caly ekran
+                enemy.update_bullets(player_drone, game_world.obstacles, 8000, 8000)
 
-        # Kolizje
+        player_drone.rect.x = int(player_drone.pos.x)
+        player_drone.rect.y = int(player_drone.pos.y)
+
+        # Kolizje drona
         if game_world.landing_pad and check_collision(player_drone, game_world.landing_pad).collision:
-            if abs(player_drone.velocity_y) < 150 and abs(player_drone.angle) < 0.3:
+            if abs(player_drone.velocity.y) < 150 and abs(player_drone.angle) < 0.3:
                 is_game_won = True
-                player_drone.velocity_x = player_drone.velocity_y = 0
+                player_drone.velocity.x = player_drone.velocity.y = 0
             else:
                 player_drone.health -= 100
                 player_drone.health_check()
@@ -128,17 +140,25 @@ def main():
 
         for obs in game_world.obstacles:
             if check_collision(player_drone, obs).collision:
-                player_drone.x, player_drone.y = old_x, old_y
-                player_drone.rect.x, player_drone.rect.y = old_x, old_y
-                player_drone.velocity_x *= -0.3
-                player_drone.velocity_y *= -0.3
+                player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
+                player_drone.rect.x, player_drone.rect.y = int(old_pos_x), int(old_pos_y)
+                player_drone.velocity.x *= -0.3
+                player_drone.velocity.y *= -0.3
+                if abs(player_drone.velocity.x) < 15:
+                    player_drone.velocity.x = 0
+                if abs(player_drone.velocity.y) < 15:
+                    player_drone.velocity.y = 0
 
         for enemy in game_world.enemies:
             if check_collision(player_drone, enemy).collision:
-                player_drone.x, player_drone.y = old_x, old_y
-                player_drone.rect.x, player_drone.rect.y = old_x, old_y
-                player_drone.velocity_x *= -0.3
-                player_drone.velocity_y *= -0.3
+                player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
+                player_drone.rect.x, player_drone.rect.y = int(old_pos_x), int(old_pos_y)
+                player_drone.velocity.x *= -0.3
+                player_drone.velocity.y *= -0.3
+                if abs(player_drone.velocity.x) < 15:
+                    player_drone.velocity.x = 0
+                if abs(player_drone.velocity.y) < 15:
+                    player_drone.velocity.y = 0
                 player_drone.health -= 15
                 player_drone.health_check()
                 if player_drone.destroyed:
@@ -168,15 +188,23 @@ def main():
             else:
                 pygame.draw.rect(game_window.screen, Color.GREEN, pad_cam_rect)
 
-            game_window.draw_text("H", (pad_cam_rect.centerx, pad_cam_rect.centery), font_size=24, color=Color.WHITE, centered=True)
+            game_window.draw_text("H", (pad_cam_rect.centerx, pad_cam_rect.centery), font_size=24, color=Color.WHITE,
+                                  centered=True)
 
-        if enemy_img_raw:
-            scaled_enemy = pygame.transform.scale(enemy_img_raw, (game_world.tile_size, game_world.tile_size))
-            for enemy in game_world.enemies:
-                game_window.screen.blit(scaled_enemy, camera.apply(enemy))
-        else:
-            for enemy in game_world.enemies:
+        # Rysowanie przeciwników i ich pocisków
+        for enemy in game_world.enemies:
+            if enemy_img_raw:
+                scaled_enemy = pygame.transform.scale(enemy_img_raw, (game_world.tile_size, game_world.tile_size))
+                enemy_cam = camera.apply(enemy)
+                rotated_enemy = pygame.transform.rotate(scaled_enemy, enemy.angle)
+                game_window.screen.blit(rotated_enemy, rotated_enemy.get_rect(center=enemy_cam.center))
+            else:
                 pygame.draw.rect(game_window.screen, Color.RED, camera.apply(enemy))
+
+            # Rysowanie pocisków
+            for bullet in enemy.bullets:
+                bullet_cam = camera.apply(bullet)
+                pygame.draw.circle(game_window.screen, Color.YELLOW, bullet_cam.center, int(bullet.width / 2))
 
         drone_cam = camera.apply(player_drone)
         if player_drone.img:
@@ -189,7 +217,6 @@ def main():
         # UI
         health_pct = max(0.0, player_drone.health / player_drone.max_health)
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
-        # POPRAWKA: Rzutowanie na int w szerokości paska!
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
         game_window.draw_text(f"HP: {int(player_drone.health)}", (225, 20), font_size=18, color=Color.WHITE)
         game_window.draw_text(f"ZYCIA: {player_drone.lives}", (20, 50), font_size=24, color=Color.WHITE)
