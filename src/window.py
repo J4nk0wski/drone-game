@@ -65,7 +65,7 @@ class Window:
         color_background = (50,  50,  50)   # tło paska (ciemny)
         color_fill       = (0,  220,  80)   # wypełnienie (zielony)
         color_border     = (200, 200, 200)  # obwódka
-        for power, side in ((left_power, "left"), (right_power, "right")):
+        for power, side in ((right_power, "left"), (left_power, "right")): #TO NIE JEST POMYŁKA - pozostałość po starej implementacji, gdzie silniki były odwrotnie przypisane
             if side == "left":
                 x = bar_margin
             else:
