@@ -35,7 +35,17 @@ def main():
     # Inicjalizacja swiata
     game_world = World(tile_size=60)
     game_world.load_level(1)
-
+    # DODANIE WARSTW TŁA Z EFEKTEM PARALAKSY
+    # Należy dodawać warstwy w kolejności "od najdalszej do najbliższej"
+    
+    # Warstwa 1: Statyczne niebo (nigdy się nie porusza względem kamery)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "background_0.png"), distance_factor=0.0, scale_to_screen=True)
+    
+    # Warstwa 2: Dalekie góry/chmury (poruszają się powoli)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "parallax_0_1.png"), distance_factor=0.05, fit_to_screen_height=True)
+    
+    # Warstwa 3: Bliższe budynki/drzewa (poruszają się szybciej)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "parallax_0_2.png"), distance_factor=0.2, fit_to_screen_height=True)
     player_drone = Drone(x=game_world.start_x, y=game_world.start_y, width=64, height=32)
     try:
         player_drone.create_image(drone_path)
@@ -191,7 +201,7 @@ def main():
         camera.update(player_drone)
 
         # --- RENDEROWANIE ---
-        game_window.render()
+        game_window.render(camera)
 
         if wall_img_raw:
             scaled_wall = pygame.transform.scale(wall_img_raw, (game_world.tile_size, game_world.tile_size))
