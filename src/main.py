@@ -1,7 +1,7 @@
 import pygame
 import os
 import math
-from drone import Drone, Bullet
+from drone import Drone
 from shared import GameObject, ObjectType, Color
 from game_logic import check_collision
 from window import Window, Camera, show_game_over_screen
@@ -34,7 +34,7 @@ def main():
 
     # inicjalizacja swiata
     game_world = World(tile_size=60)
-    game_world.load_level(1)  # Wczytywanie poziomu 1 ze słownika LEVELS
+    game_world.load_level(1)
 
     player_drone = Drone(x=game_world.start_x, y=game_world.start_y, width=64, height=32)
     try:
@@ -75,14 +75,14 @@ def main():
             player_drone.destroyed = False
             is_game_over = False
             is_game_won = False
+            # Opcjonalnie: można tu wywołać game_world.load_level(1) żeby zresetować monety i wieżyczki
             for enemy in game_world.enemies:
                 enemy.bullets.clear()
 
-        # Wyliczenie przyrostu siły silników na klatkę, by od 0 do 100% minęło 1.5s
+        # Wyliczenie przyrostu siły silników
         left_force_change = (player_drone.left_rotor.max_force / 1.5) * dt
         right_force_change = (player_drone.right_rotor.max_force / 1.5) * dt
 
-        # Wyliczenie szybkiego przyrostu siły (od 0 do 100% w 0.5s)
         left_force_change_fast = (player_drone.left_rotor.max_force / 0.5) * dt
         right_force_change_fast = (player_drone.right_rotor.max_force / 0.5) * dt
 
@@ -116,25 +116,22 @@ def main():
             player_drone.left_rotor.set_force(0)
             player_drone.right_rotor.set_force(0)
 
-        # Zapisywanie kopii pozycji wektorowej
         old_pos_x, old_pos_y = player_drone.pos.x, player_drone.pos.y
 
         if not is_game_over and not is_game_won:
             player_drone.update_physics(dt)
 
-            # Aktualizacja pocisków gracza
             player_drone.update_bullets(game_world.enemies, game_world.obstacles)
 
-            # Wiezyczki i pociski
             for enemy in game_world.enemies:
                 enemy.shoot(player_drone, game_world.obstacles)
-                # granice 8000,8000 po to aby pociski lecilay przez caly ekran
                 enemy.update_bullets(player_drone, game_world.obstacles, 8000, 8000)
 
         player_drone.rect.x = int(player_drone.pos.x)
         player_drone.rect.y = int(player_drone.pos.y)
 
-        # Kolizje drona
+        # --- KOLIZJE ---
+        # 1. Lądowisko
         if game_world.landing_pad and check_collision(player_drone, game_world.landing_pad).collision:
             if abs(player_drone.velocity.y) < 150 and abs(player_drone.angle) < 0.3:
                 is_game_won = True
@@ -145,6 +142,7 @@ def main():
                 if player_drone.destroyed:
                     is_game_over = True
 
+        # 2. Przeszkody (ściany)
         for obs in game_world.obstacles:
             if check_collision(player_drone, obs).collision:
                 player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
@@ -156,6 +154,7 @@ def main():
                 if abs(player_drone.velocity.y) < 15:
                     player_drone.velocity.y = 0
 
+        # 3. Wieżyczki
         for enemy in game_world.enemies:
             if check_collision(player_drone, enemy).collision:
                 player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
@@ -171,12 +170,19 @@ def main():
                 if player_drone.destroyed:
                     is_game_over = True
 
+        # 4. Monety (ZBIERANIE!)
+        # Sprawdzamy kopie listy, bo bedziemy usuwac z niej elementy
+        for coin in getattr(game_world, 'coins', []):  # Zabezpieczenie jesli w world.py nie ma atrybutu coins
+            if check_collision(player_drone, coin).collision:
+                player_drone.score += coin.value
+                game_world.coins.remove(coin)
+
         if check_collision(player_drone, floor).collision:
             is_game_over = True
 
         camera.update(player_drone)
 
-        # Renderowanie
+        # --- RENDEROWANIE ---
         game_window.render()
 
         if wall_img_raw:
@@ -194,7 +200,6 @@ def main():
                 game_window.screen.blit(scaled_meta, pad_cam_rect)
             else:
                 pygame.draw.rect(game_window.screen, Color.GREEN, pad_cam_rect)
-
             game_window.draw_text("H", (pad_cam_rect.centerx, pad_cam_rect.centery), font_size=24, color=Color.WHITE,
                                   centered=True)
 
@@ -212,6 +217,12 @@ def main():
                 bullet_cam = camera.apply(bullet)
                 pygame.draw.circle(game_window.screen, Color.YELLOW, bullet_cam.center, int(bullet.width / 2))
 
+        # Rysowanie monet (tymczasowo na pomaranczowo)
+        for coin in getattr(game_world, 'coins', []):
+            coin_cam = camera.apply(coin)
+            # Jesli dodasz teksture, mozesz ja tutaj wstawic. Na razie rysujemy kolko
+            pygame.draw.circle(game_window.screen, Color.ORANGE, coin_cam.center, int(coin.width / 2))
+
         # Rysowanie pocisków gracza (cyjanowe)
         for bullet in player_drone.bullets:
             bullet_cam = camera.apply(bullet)
@@ -225,7 +236,7 @@ def main():
         else:
             pygame.draw.rect(game_window.screen, Color.RED, drone_cam)
 
-        # UI
+        # --- UI ---
         health_pct = max(0.0, player_drone.health / player_drone.max_health)
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
