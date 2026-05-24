@@ -1,5 +1,5 @@
 from shared import GameObject, ObjectType
-from drone import Enemy
+from drone import Enemy, Coin  # Dodano import Coin
 
 # Baza wszystkich poziomów w grze
 LEVELS = {
@@ -7,15 +7,15 @@ LEVELS = {
     1: [
         "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
         "O                                                                              O",
-        "O   S                                                                          O",
+        "O   S                  C                                                       O",
         "O                                                                              O",
-        "O                                      E                                       O",
+        "O                                      E               C                       O",
         "O                                   OOOOOOO                                    O",
-        "O                                                                              O",
+        "O               C                                                              O",
         "O             E                                              E                 O",
         "OOOOOOOOOOOOOOOOOOOOO                                  OOOOOOOOOOOOOOOOOOOOOOOOO",
         "O                                                                              O",
-        "O                                                                        M     O",
+        "O                                C                                       M     O",
         "O                                                                              O",
         "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
     ],
@@ -36,6 +36,7 @@ class World:
         self.tile_size = tile_size
         self.obstacles = []
         self.enemies = []
+        self.coins = []  # Nowa lista przechowująca monety
         self.landing_pad = None
         self.start_x = 0
         self.start_y = 0
@@ -45,6 +46,7 @@ class World:
         """Czyści poprzedni stan i buduje poziom na podstawie ID ze słownika LEVELS"""
         self.obstacles.clear()
         self.enemies.clear()
+        self.coins.clear()  # Czyszczenie monet przy ładowaniu nowego poziomu
         self.landing_pad = None
         self.current_level = level_id
 
@@ -74,3 +76,6 @@ class World:
                 elif tile == "E":
                     # Generowanie wieżyczki UGV
                     self.enemies.append(Enemy(x=x, y=y, reload_time=5000))
+                elif tile == "C":
+                    # Generowanie monety (przesunięcie +10 żeby wyśrodkować 40x40 w kafelku 60x60)
+                    self.coins.append(Coin(x=x + 10, y=y + 10))
