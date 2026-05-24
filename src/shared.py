@@ -39,6 +39,7 @@ class ObjectType(Enum):
     OBSTACLE = auto()
     ENEMY = auto()
     BULLET = auto()
+    COIN = auto()
 
     def __eq__(self, other) -> bool:
         return self.value == other.value

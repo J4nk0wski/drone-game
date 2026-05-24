@@ -288,3 +288,21 @@ class Rotor:
 
     def set_force(self, force: float):
         self.force = max(0.0, min(force, self.max_force))
+
+    """
+    def set_force(self, force: float) -> None:
+        #Ustawia siłę silnika (nie może być ujemna)
+        self.force = max(0.0, force)
+        angle_rad = atan2(self.velocity.y, self.velocity.x)
+        angle_deg = degrees(angle_rad)
+
+        self.angle = -angle_deg
+    """
+
+"""
+Monety po których zebraniu dron otrzymuje punkty.
+"""
+class Coin(GameObject):
+    def __init__(self, x: float = 0, y: float = 0, width: float = 40, height: float = 40, value: float = 5):
+        super().__init__(x, y, width, height, ObjectType.COIN)
+        self.value = value
