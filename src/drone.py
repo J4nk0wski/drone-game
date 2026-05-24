@@ -28,6 +28,8 @@ class Drone(GameObject):
         self.destroyed: bool = False
         self.max_lives: int = 3
         self.max_health: int = 100
+        self.spawn_x: float = x
+        self.spawn_y: float = y
 
         self.mass = 0.1
         self.inertia = 10
@@ -92,6 +94,15 @@ class Drone(GameObject):
             self.lives -= 1
             if self.lives <= 0:
                 self.destroyed = True
+            else:
+                # Jeśli dron ma jeszcze życia, przenosimy go na start i wyłączamy silniki
+                self.pos.x = self.spawn_x
+                self.pos.y = self.spawn_y
+                self.velocity = Vector2(0, 0)
+                self.angular_velocity = 0
+                self.angle = 0
+                self.left_rotor.set_force(0)
+                self.right_rotor.set_force(0)
             self.health = self.max_health
 
     """
@@ -99,13 +110,18 @@ class Drone(GameObject):
     Metoda przyjmuje pozycję początkową (inaczej x=0, y=0)
     """
     def reset(self, start_x: float=0, start_y: float=0) -> None:
+        self.spawn_x = start_x
+        self.spawn_y = start_y
         self.pos.x = start_x
         self.pos.y = start_y
         self.velocity = Vector2(0, 0)
         self.angular_velocity = 0
+        self.angle = 0
         self.score = 0
         self.health = self.max_health
         self.lives = self.max_lives
+        self.left_rotor.set_force(0)
+        self.right_rotor.set_force(0)
 
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
