@@ -293,3 +293,8 @@ class Rotor:
 
         self.angle = -angle_deg
     """
+
+class Coin(GameObject):
+    def __init__(self, x: float = 0, y: float = 0, width: float = 40, height: float = 40, value: float = 5):
+        super().__init__(x, y, width, height, ObjectType.COIN)
+        self.value = value
