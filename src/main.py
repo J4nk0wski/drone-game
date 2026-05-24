@@ -130,21 +130,40 @@ def main():
             for enemy in game_world.enemies:
                 enemy.bullets.clear()
 
+        # Wyliczenie przyrostu siły silników na klatkę, by od 0 do 100% minęło 1.5s
+        left_force_change = (player_drone.left_rotor.max_force / 1.5) * dt
+        right_force_change = (player_drone.right_rotor.max_force / 1.5) * dt
+        
+        # Wyliczenie szybkiego przyrostu siły (od 0 do 100% w 0.5s)
+        left_force_change_fast = (player_drone.left_rotor.max_force / 0.5) * dt
+        right_force_change_fast = (player_drone.right_rotor.max_force / 0.5) * dt
+
         if not is_game_over and not is_game_won:
             # Strzelanie
             if keys[pygame.K_SPACE]:
                 shotgun.shoot(player_drone)
 
             if keys[pygame.K_w]:
-                player_drone.left_rotor.set_force(
-                    min(player_drone.left_rotor.force + 2, player_drone.left_rotor.max_force))
-            if keys[pygame.K_s]:
-                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - 2, 0))
-            if keys[pygame.K_UP]:
                 player_drone.right_rotor.set_force(
-                    min(player_drone.right_rotor.force + 2, player_drone.right_rotor.max_force))
+                    min(player_drone.right_rotor.force + right_force_change, player_drone.right_rotor.max_force))
+            if keys[pygame.K_s]:
+                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change, 0))
+            if keys[pygame.K_d]:
+                player_drone.right_rotor.set_force(
+                    min(player_drone.right_rotor.force + right_force_change_fast, player_drone.right_rotor.max_force))
+            if keys[pygame.K_a]:
+                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change_fast, 0))
+                
+            if keys[pygame.K_UP]:
+                player_drone.left_rotor.set_force(
+                    min(player_drone.left_rotor.force + left_force_change, player_drone.left_rotor.max_force))
             if keys[pygame.K_DOWN]:
-                player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - 2, 0))
+                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - left_force_change, 0))
+            if keys[pygame.K_RIGHT]:
+                player_drone.left_rotor.set_force(
+                    min(player_drone.left_rotor.force + left_force_change_fast, player_drone.left_rotor.max_force))
+            if keys[pygame.K_LEFT]:
+                player_drone.left_rotor.set_force(max(player_drone.left_rotor.force - left_force_change_fast, 0))
         else:
             player_drone.left_rotor.set_force(0)
             player_drone.right_rotor.set_force(0)
