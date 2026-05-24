@@ -1,7 +1,15 @@
+from dataclasses import dataclass
 import pygame
 from shared import Vector2, GameObject, Color
 from drone import Drone
 
+@dataclass
+class ParallaxLayer:
+    image: pygame.Surface
+    distance_factor: float
+    # Wartość distance_factor: 
+    # 0.0 to tło całkowicie statyczne (najdalsze, np. niebo)
+    # 1.0 to obiekt na tej samej płaszczyźnie co dron (rusza się równo z kamerą)
 class Window:
 #ustawia domyslny rozmiar okna na 1280x720 i nazwe gry na GAME 
     def __init__(self, size=(1280,720), game_name="Game"):
@@ -18,6 +26,34 @@ class Window:
         pygame.display.set_caption(game_name)
         pygame.font.init()
         self.font = pygame.font.SysFont('Consolas', 24, bold=True)
+        self.parallax_layers: list[ParallaxLayer] = []
+        
+    def add_parallax_layer(self, image_path: str, distance_factor: float, 
+                           scale_to_screen: bool = False, 
+                           custom_size: tuple[int, int] = None,
+                           fit_to_screen_height: bool = False):
+        try:
+            image = pygame.image.load(image_path).convert_alpha()
+            
+            # Skalowanie dokładnie do wymiarów całego ekranu (np. 1280x720)
+            if scale_to_screen:
+                image = pygame.transform.scale(image, self.screen_size)
+            
+            # Zachowanie proporcji grafiki, ale dopasowanie jej wysokości do wysokości ekranu
+            elif fit_to_screen_height:
+                screen_h = self.screen_size[1]
+                img_w, img_h = image.get_size()
+                new_w = int(img_w * (screen_h / img_h))
+                image = pygame.transform.scale(image, (new_w, screen_h))
+                
+            # Wpisanie własnych sztywnych wymiarów (szerokość, wysokość)
+            elif custom_size:
+                image = pygame.transform.scale(image, custom_size)
+                
+            self.parallax_layers.append(ParallaxLayer(image, distance_factor))
+        except pygame.error:
+            print(f"Nie znaleziono grafiki tła paralaksy: {image_path}")
+            
     def set_background_image(self, image_path):
         #Wczytuje zdjęcie ze ścieżki i skaluje je do rozmiaru okna
         image = pygame.image.load(image_path)
@@ -106,12 +142,33 @@ class Window:
 
     #zmienia kolor tla oraz dodaje obiekty rect na ekran
     #mozna zmienic w zaleznosci od potrzeb
-    def render(self):
+    def render(self, camera: 'Camera' = None):
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
         else:
             self.screen.fill(self.color)
 
+        # Rysowanie warstw paralaksy
+        if camera and self.parallax_layers:
+            screen_w, screen_h = self.screen_size
+            
+            for layer in self.parallax_layers:
+                img_w = layer.image.get_width()
+                img_h = layer.image.get_height()
+                
+                # Ruch poziomy (X) - standardowe zapętlenie
+                offset_x = -(camera.offset.x * layer.distance_factor) % img_w
+                
+                # Ruch pionowy (Y) - wyrównujemy do DOŁU ekranu.
+                # Zaczynamy od dolnej krawędzi (screen_h - img_h) i odejmujemy ruch kamery.
+                base_y = screen_h - img_h
+                offset_y = base_y - (camera.offset.y * layer.distance_factor)
+
+                # Rysowanie kafelkowe tylko w poziomie (X), pion (Y) rysujemy raz przy dnie
+                for x in range(int(offset_x) - img_w, screen_w, img_w):
+                    self.screen.blit(layer.image, (x, int(offset_y)))
+
+        # Rysowanie obiektów gry
         for rectangle in self.rectangles:
             self.draw_rect(rectangle)
         for image, rect in self.image_rects:
