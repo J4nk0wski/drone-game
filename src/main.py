@@ -1,59 +1,11 @@
 import pygame
 import os
 import math
-from drone import Drone, Bullet  # Dodano import pocisku dla strzelby
+from drone import Drone, Bullet
 from shared import GameObject, ObjectType, Color
 from game_logic import check_collision
 from window import Window, Camera, show_game_over_screen
 from world import World
-
-
-# Strzelanie gracza
-class PlayerProjectileManager:
-    def __init__(self):
-        self.bullets = []
-        self.last_shot_time = 0
-        self.cooldown = 500  # Czas przeładowania (pół sekundy)
-
-    def shoot(self, drone):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot_time >= self.cooldown:
-            self.last_shot_time = current_time
-            base_angle = math.degrees(drone.angle)
-            spread = 12
-            speed = 25
-
-            # Wypuszczamy trzy kule (Shotgun)
-            self.bullets.append(Bullet(drone.pos.x, drone.pos.y, base_angle + spread, speed))
-            self.bullets.append(Bullet(drone.pos.x, drone.pos.y, base_angle, speed))
-            self.bullets.append(Bullet(drone.pos.x, drone.pos.y, base_angle - spread, speed))
-
-    def update(self, enemies, obstacles):
-        for bullet in reversed(self.bullets):
-            bullet.update_pos()
-            hit_something = False
-
-            # Kolizja ze ścianami
-            for obs in obstacles:
-                if check_collision(bullet, obs).collision:
-                    hit_something = True
-                    break
-
-            # Kolizja z wieżyczkami (ZNISZCZENIE)
-            if not hit_something:
-                for enemy in enemies[:]:
-                    if check_collision(bullet, enemy).collision:
-                        enemies.remove(enemy)
-                        hit_something = True
-                        break
-
-            # Usunięcie pocisku po wylocie za ekran
-            if (bullet.pos.x < -2000 or bullet.pos.x > 8000 or
-                    bullet.pos.y < -2000 or bullet.pos.y > 8000):
-                hit_something = True
-
-            if hit_something and bullet in self.bullets:
-                self.bullets.remove(bullet)
 
 
 def main():
@@ -105,9 +57,6 @@ def main():
     except pygame.error:
         enemy_img_raw = None
 
-    # Inicjalizacja broni gracza
-    shotgun = PlayerProjectileManager()
-
     floor = GameObject(x=-2000, y=2500, width=8000, height=50, object_type=ObjectType.FLOOR)
     is_game_over = False
     is_game_won = False
@@ -126,14 +75,13 @@ def main():
             player_drone.destroyed = False
             is_game_over = False
             is_game_won = False
-            shotgun.bullets.clear()  # Czyścimy strzały gracza po restarcie
             for enemy in game_world.enemies:
                 enemy.bullets.clear()
 
         # Wyliczenie przyrostu siły silników na klatkę, by od 0 do 100% minęło 1.5s
         left_force_change = (player_drone.left_rotor.max_force / 1.5) * dt
         right_force_change = (player_drone.right_rotor.max_force / 1.5) * dt
-        
+
         # Wyliczenie szybkiego przyrostu siły (od 0 do 100% w 0.5s)
         left_force_change_fast = (player_drone.left_rotor.max_force / 0.5) * dt
         right_force_change_fast = (player_drone.right_rotor.max_force / 0.5) * dt
@@ -141,7 +89,7 @@ def main():
         if not is_game_over and not is_game_won:
             # Strzelanie
             if keys[pygame.K_SPACE]:
-                shotgun.shoot(player_drone)
+                player_drone.shoot()
 
             if keys[pygame.K_w]:
                 player_drone.right_rotor.set_force(
@@ -153,7 +101,7 @@ def main():
                     min(player_drone.right_rotor.force + right_force_change_fast, player_drone.right_rotor.max_force))
             if keys[pygame.K_a]:
                 player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change_fast, 0))
-                
+
             if keys[pygame.K_UP]:
                 player_drone.left_rotor.set_force(
                     min(player_drone.left_rotor.force + left_force_change, player_drone.left_rotor.max_force))
@@ -175,7 +123,7 @@ def main():
             player_drone.update_physics(dt)
 
             # Aktualizacja pocisków gracza
-            shotgun.update(game_world.enemies, game_world.obstacles)
+            player_drone.update_bullets(game_world.enemies, game_world.obstacles)
 
             # Wiezyczki i pociski
             for enemy in game_world.enemies:
@@ -265,7 +213,7 @@ def main():
                 pygame.draw.circle(game_window.screen, Color.YELLOW, bullet_cam.center, int(bullet.width / 2))
 
         # Rysowanie pocisków gracza (cyjanowe)
-        for bullet in shotgun.bullets:
+        for bullet in player_drone.bullets:
             bullet_cam = camera.apply(bullet)
             pygame.draw.circle(game_window.screen, Color.CYAN, bullet_cam.center, int(bullet.width / 2))
 
@@ -282,6 +230,7 @@ def main():
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
         game_window.draw_text(f"HP: {int(player_drone.health)}", (225, 20), font_size=18, color=Color.WHITE)
+        game_window.draw_text(f"SCORE: {player_drone.score}", (10, 80), font_size=24, color=Color.WHITE)
         game_window.draw_text(f"ZYCIA: {player_drone.lives}", (20, 50), font_size=24, color=Color.WHITE)
 
         game_window.draw_engine_power(

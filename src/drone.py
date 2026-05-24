@@ -17,10 +17,6 @@ Atrybuty:
 - lives - życia
 - max_health - zdrowie (domyślnie 100)
 - max_lives - życia (domyślnie 3)
-
---------/health_check/--------
-jeśli zdrowie <= 0 zabiera życie i regeneruje zdrowie 
-jeśli brak żyć dron.destroyed = True
 """
 class Drone(GameObject):
     def __init__(self, x: float=0, y: float=0, width: float=60, height: float=40) -> None:
@@ -43,6 +39,11 @@ class Drone(GameObject):
         self.right_rotor = Rotor(width/2, self.center_x + width/2, y)
         self.left_rotor = Rotor(-width/2, self.center_x - width/2, y)
 
+        # --- ARSENAŁ DRONA ---
+        self.bullets: list['Bullet'] = []
+        self.last_shot_time: float = 0
+        self.cooldown: int = 500
+
     """
     Funkcja symuluje fizykę obiektu.
     """
@@ -56,6 +57,7 @@ class Drone(GameObject):
 
         #opor powietrza
         self.velocity.x *= 0.99
+        self.velocity.y *= 0.99
         self.angular_velocity *= 0.90
 
         self.velocity.x += ax * dt
@@ -106,11 +108,54 @@ class Drone(GameObject):
         self.score = 0
         self.health = self.max_health
         self.lives = self.max_lives
+        self.bullets.clear()
+
+    """
+    Wypuszcza 3 pociski (Shotgun).
+    """
+    def shoot(self) -> None:
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_shot_time >= self.cooldown:
+            self.last_shot_time = current_time
+            base_angle = degrees(self.angle)
+            spread = 12
+            speed = 25
+
+            self.bullets.append(Bullet(self.pos.x, self.pos.y, base_angle + spread, speed))
+            self.bullets.append(Bullet(self.pos.x, self.pos.y, base_angle, speed))
+            self.bullets.append(Bullet(self.pos.x, self.pos.y, base_angle - spread, speed))
+
+    """
+    Aktualizuje kule gracza i niszczy wieżyczki.
+    """
+    def update_bullets(self, enemies: list[GameObject], obstacles: list[GameObject]) -> None:
+        for bullet in reversed(self.bullets):
+            bullet.update_pos()
+            hit_something = False
+
+            for obs in obstacles:
+                if bullet.rect.colliderect(obs.rect):
+                    hit_something = True
+                    break
+
+            if not hit_something:
+                for enemy in enemies[:]:
+                    if bullet.rect.colliderect(enemy.rect):
+                        enemies.remove(enemy)
+                        self.score += 100
+                        hit_something = True
+                        break
+
+            if (bullet.pos.x < -2000 or bullet.pos.x > 8000 or
+                    bullet.pos.y < -2000 or bullet.pos.y > 8000):
+                hit_something = True
+
+            if hit_something and bullet in self.bullets:
+                self.bullets.remove(bullet)
+
 
 """
 Klasa podłogi. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla podłogi.
-
-Klasa dziedziczy po GameObject 
 """
 class Floor(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
@@ -118,8 +163,6 @@ class Floor(GameObject):
 
 """
 Klasa ściany. Teraz bardzo uboga, ale z czasem można dodać mechaniki specjalne dla ściany.
-
-Klasa dziedziczy po GameObject 
 """
 class Wall(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
@@ -127,8 +170,6 @@ class Wall(GameObject):
 
 """
 Klasa przeszkody.
-
-Klasa dziedziczy po GameObject 
 """
 class Obstacle(GameObject):
     def __init__(self, x: float = 0, y: float = 0, width: float = 60, height: float = 40) -> None:
@@ -136,13 +177,10 @@ class Obstacle(GameObject):
 
 """
 Klasa statycznego przeciwnika, który strzela.
-
-Klasa dziedziczy po GameObject 
 """
 class Enemy(GameObject):
     def __init__(self, x: float = 0, y: float = 0, reload_time: int=3000, bullet_speed: float=7) -> None:
         super().__init__(x, y, 50, 50, ObjectType.ENEMY)
-        #czas w milisekundach
         self.reload_time: int = reload_time
         self.reload_timer: float = 0
 
@@ -150,13 +188,6 @@ class Enemy(GameObject):
         self.bullets: list[Bullet] = []
         self.bullet_speed: float = bullet_speed
 
-    """
-    Metoda pozwala na sprawdzenie czy przeciwnik 'widzi' podany jako argument obiekt 
-    Parametry jakie trzeba podać to:
-    - szukany obiekt (instancja klasy GameObject)
-    - lista wszystkich obiektów które 'są materialne' (zasłaniają widoczność), 
-      podane jako lista obiektów dziedziczących po GameObject
-    """
     def search(self, dron: GameObject, objects: list[GameObject]) -> bool:
         start_pos = self.rect.center
         end_pos = dron.rect.center
@@ -170,9 +201,6 @@ class Enemy(GameObject):
 
         return True
 
-    """
-    Jeśli działo jest przeładowanie i cel wykryty to strzela.
-    """
     def shoot(self, dron: GameObject, objects: list[GameObject]):
         if not self.reloading and self.search(dron, objects):
             self.reload_timer = pygame.time.get_ticks()
@@ -187,18 +215,12 @@ class Enemy(GameObject):
         else:
             self.reload()
 
-    """
-    Przeładowuje broń przeciwnika co określony czas (reload time).
-    """
     def reload(self) -> None:
         if self.reloading:
             current_time = pygame.time.get_ticks()
             if current_time - self.reload_timer >= self.reload_time:
                 self.reloading = False
 
-    """
-    Oblicza nachylenie.
-    """
     @staticmethod
     def tilt(dist: Vector2) -> float:
         angle_rad = atan2(dist.y, dist.x)
@@ -206,12 +228,7 @@ class Enemy(GameObject):
 
         return  -angle_deg
 
-    """
-    Aktualizuje pozycję pocisków i obsługuje kolizje.
-    Usuwa pociski, które trafiły w przeszkodę, drona lub wyleciały poza ekran.
-    """
     def update_bullets(self, dron: Drone, objects: list[GameObject], screen_width: int = 800, screen_height: int = 600) -> None:
-
         for bullet in reversed(self.bullets):
             bullet.update_pos()
 
@@ -239,8 +256,6 @@ class Enemy(GameObject):
 
 """
 Klasa pocisku, króry znika po trafieniu w przeszkodę.
-
-Klasa dziedziczy po GameObject
 """
 class Bullet(GameObject):
     def __init__(self, x: float, y: float, angle: float, speed: float) -> None:
@@ -249,10 +264,6 @@ class Bullet(GameObject):
         self.angle = angle
         self.velocity: Vector2 = self.calculate_velocity_from_angle()
 
-    """
-    Oblicza składowe wektora prędkości X i Y na podstawie kąta dopasowanego do Pygame
-    oraz zadanej prędkości (speed).
-    """
     def calculate_velocity_from_angle(self) -> Vector2:
         standard_angle_deg = -self.angle
         angle_rad = radians(standard_angle_deg)
@@ -260,9 +271,6 @@ class Bullet(GameObject):
         vel_y = sin(angle_rad) * self.speed
         return Vector2(vel_x, vel_y)
 
-    """
-    Aktualizuje pozycję obiektu na podstawie jego prędkości.
-    """
     def update_pos(self) -> None:
         self.pos += self.velocity
 
@@ -271,25 +279,12 @@ Klasa Rotora przeznaczona do użytku w klasie Drone.
 """
 class Rotor:
     def __init__(self, offset_x: float, x_pos ,y_pos, size: int = 6):
-        self.offset: float = offset_x   # odległość od środka drona (dodatnia w prawo, ujemna w lewo)
-        self.force: float = 0.0            # siła ciągu (zawsze >= 0)
+        self.offset: float = offset_x
+        self.force: float = 0.0
         self.size: int = size
-        self.x = x_pos                #pozycja silnika
+        self.x = x_pos
         self.y = y_pos
         self.max_force = 10
 
-    """
-    Ustawianie wartości w podanych przedziałach.
-    """
     def set_force(self, force: float):
         self.force = max(0.0, min(force, self.max_force))
-
-    """
-    def set_force(self, force: float) -> None:
-        #Ustawia siłę silnika (nie może być ujemna)
-        self.force = max(0.0, force)
-        angle_rad = atan2(self.velocity.y, self.velocity.x)
-        angle_deg = degrees(angle_rad)
-
-        self.angle = -angle_deg
-    """
