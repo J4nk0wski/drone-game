@@ -32,10 +32,20 @@ def main():
     camera = Camera(screen_width=1280, screen_height=720, look_ahead=0.0, damping=0.08)
     running = True
 
-    # inicjalizacja swiata
+    # Inicjalizacja swiata
     game_world = World(tile_size=60)
-    game_world.load_level(1)  # Wczytywanie poziomu 1 ze słownika LEVELS
-
+    game_world.load_level(1)
+    # DODANIE WARSTW TŁA Z EFEKTEM PARALAKSY
+    # Należy dodawać warstwy w kolejności "od najdalszej do najbliższej"
+    
+    # Warstwa 1: Statyczne niebo (nigdy się nie porusza względem kamery)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "background_0.png"), distance_factor=0.0, scale_to_screen=True)
+    
+    # Warstwa 2: Dalekie góry/chmury (poruszają się powoli)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "parallax_0_1.png"), distance_factor=0.05, fit_to_screen_height=True)
+    
+    # Warstwa 3: Bliższe budynki/drzewa (poruszają się szybciej)
+    game_window.add_parallax_layer(os.path.join(textures_dir, "parallax_0_2.png"), distance_factor=0.2, fit_to_screen_height=True)
     player_drone = Drone(x=game_world.start_x, y=game_world.start_y, width=64, height=32)
     try:
         player_drone.create_image(drone_path)
@@ -61,6 +71,10 @@ def main():
     is_game_over = False
     is_game_won = False
 
+    # Konfiguracja sterowania: czas (w sekundach) od 0 do 100% mocy silnika
+    NORMAL_POWER_UP_TIME = 1.9
+    FAST_POWER_UP_TIME = 0.5
+
     while running:
         dt = 1.0 / game_window.fps
 
@@ -78,15 +92,24 @@ def main():
             for enemy in game_world.enemies:
                 enemy.bullets.clear()
 
-        # Wyliczenie przyrostu siły silników na klatkę, by od 0 do 100% minęło 1.5s
-        left_force_change = (player_drone.left_rotor.max_force / 1.5) * dt
-        right_force_change = (player_drone.right_rotor.max_force / 1.5) * dt
-        
-        # Wyliczenie szybkiego przyrostu siły (od 0 do 100% w 0.5s)
-        left_force_change_fast = (player_drone.left_rotor.max_force / 0.5) * dt
-        right_force_change_fast = (player_drone.right_rotor.max_force / 0.5) * dt
+        # Wyliczenie przyrostu siły silników na klatkę (zawsze poza blokiem klawisza R)
+        left_force_change = (player_drone.left_rotor.max_force / NORMAL_POWER_UP_TIME) * dt
+        right_force_change = (player_drone.right_rotor.max_force / NORMAL_POWER_UP_TIME) * dt
+        left_force_change_fast = (player_drone.left_rotor.max_force / FAST_POWER_UP_TIME) * dt
+        right_force_change_fast = (player_drone.right_rotor.max_force / FAST_POWER_UP_TIME) * dt
 
         if not is_game_over and not is_game_won:
+            # Strzelanie
+            if keys[pygame.K_SPACE]:
+                player_drone.shoot()
+
+            # Stabilizacja lotu
+            if keys[pygame.K_q]:
+                avg_force = (player_drone.left_rotor.force + player_drone.right_rotor.force) / 2.0
+                player_drone.left_rotor.set_force(avg_force)
+                player_drone.right_rotor.set_force(avg_force)
+
+            # Prawy rotor (WASD)
             if keys[pygame.K_w]:
                 player_drone.right_rotor.set_force(
                     min(player_drone.right_rotor.force + right_force_change, player_drone.right_rotor.max_force))
@@ -97,7 +120,8 @@ def main():
                     min(player_drone.right_rotor.force + right_force_change_fast, player_drone.right_rotor.max_force))
             if keys[pygame.K_a]:
                 player_drone.right_rotor.set_force(max(player_drone.right_rotor.force - right_force_change_fast, 0))
-                
+
+            # Lewy rotor (Strzałki)
             if keys[pygame.K_UP]:
                 player_drone.left_rotor.set_force(
                     min(player_drone.left_rotor.force + left_force_change, player_drone.left_rotor.max_force))
@@ -112,22 +136,21 @@ def main():
             player_drone.left_rotor.set_force(0)
             player_drone.right_rotor.set_force(0)
 
-        # Zapisywanie kopii pozycji wektorowej
         old_pos_x, old_pos_y = player_drone.pos.x, player_drone.pos.y
 
         if not is_game_over and not is_game_won:
             player_drone.update_physics(dt)
+            player_drone.update_bullets(game_world.enemies, game_world.obstacles)
 
-            # Wiezyczki i pociski
             for enemy in game_world.enemies:
                 enemy.shoot(player_drone, game_world.obstacles)
-                # granice 8000,8000 po to aby pociski lecilay przez caly ekran
                 enemy.update_bullets(player_drone, game_world.obstacles, 8000, 8000)
 
         player_drone.rect.x = int(player_drone.pos.x)
         player_drone.rect.y = int(player_drone.pos.y)
 
-        # Kolizje drona
+        # --- KOLIZJE ---
+        # 1. Lądowisko
         if game_world.landing_pad and check_collision(player_drone, game_world.landing_pad).collision:
             if abs(player_drone.velocity.y) < 150 and abs(player_drone.angle) < 0.3:
                 is_game_won = True
@@ -138,6 +161,7 @@ def main():
                 if player_drone.destroyed:
                     is_game_over = True
 
+        # 2. Przeszkody (ściany)
         for obs in game_world.obstacles:
             if check_collision(player_drone, obs).collision:
                 player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
@@ -149,6 +173,7 @@ def main():
                 if abs(player_drone.velocity.y) < 15:
                     player_drone.velocity.y = 0
 
+        # 3. Wieżyczki
         for enemy in game_world.enemies:
             if check_collision(player_drone, enemy).collision:
                 player_drone.pos.x, player_drone.pos.y = old_pos_x, old_pos_y
@@ -164,13 +189,19 @@ def main():
                 if player_drone.destroyed:
                     is_game_over = True
 
+        # 4. Monety
+        for coin in getattr(game_world, 'coins', []):
+            if check_collision(player_drone, coin).collision:
+                player_drone.score += coin.value
+                game_world.coins.remove(coin)
+
         if check_collision(player_drone, floor).collision:
             is_game_over = True
 
         camera.update(player_drone)
 
-        # Renderowanie
-        game_window.render()
+        # --- RENDEROWANIE ---
+        game_window.render(camera)
 
         if wall_img_raw:
             scaled_wall = pygame.transform.scale(wall_img_raw, (game_world.tile_size, game_world.tile_size))
@@ -187,11 +218,9 @@ def main():
                 game_window.screen.blit(scaled_meta, pad_cam_rect)
             else:
                 pygame.draw.rect(game_window.screen, Color.GREEN, pad_cam_rect)
-
             game_window.draw_text("H", (pad_cam_rect.centerx, pad_cam_rect.centery), font_size=24, color=Color.WHITE,
                                   centered=True)
 
-        # Rysowanie przeciwników i ich pocisków
         for enemy in game_world.enemies:
             if enemy_img_raw:
                 scaled_enemy = pygame.transform.scale(enemy_img_raw, (game_world.tile_size, game_world.tile_size))
@@ -201,10 +230,17 @@ def main():
             else:
                 pygame.draw.rect(game_window.screen, Color.RED, camera.apply(enemy))
 
-            # Rysowanie pocisków
             for bullet in enemy.bullets:
                 bullet_cam = camera.apply(bullet)
                 pygame.draw.circle(game_window.screen, Color.YELLOW, bullet_cam.center, int(bullet.width / 2))
+
+        for coin in getattr(game_world, 'coins', []):
+            coin_cam = camera.apply(coin)
+            pygame.draw.circle(game_window.screen, Color.ORANGE, coin_cam.center, int(coin.width / 2))
+
+        for bullet in player_drone.bullets:
+            bullet_cam = camera.apply(bullet)
+            pygame.draw.circle(game_window.screen, Color.CYAN, bullet_cam.center, int(bullet.width / 2))
 
         drone_cam = camera.apply(player_drone)
         if player_drone.img:
@@ -214,11 +250,12 @@ def main():
         else:
             pygame.draw.rect(game_window.screen, Color.RED, drone_cam)
 
-        # UI
+        # --- UI ---
         health_pct = max(0.0, player_drone.health / player_drone.max_health)
         pygame.draw.rect(game_window.screen, Color.RED, (20, 20, 200, 20))
         pygame.draw.rect(game_window.screen, Color.GREEN, (20, 20, int(200 * health_pct), 20))
         game_window.draw_text(f"HP: {int(player_drone.health)}", (225, 20), font_size=18, color=Color.WHITE)
+        game_window.draw_text(f"SCORE: {player_drone.score}", (10, 80), font_size=24, color=Color.WHITE)
         game_window.draw_text(f"ZYCIA: {player_drone.lives}", (20, 50), font_size=24, color=Color.WHITE)
 
         game_window.draw_engine_power(

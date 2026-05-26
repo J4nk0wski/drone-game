@@ -5,7 +5,7 @@ import os
 # Poprawka ścieżki, żeby test widział pliki z folderu src
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-# POPRAWKA: Importujemy też słownik LEVELS, żeby móc na nim operować
+#Importujemy też słownik LEVELS, żeby móc na nim operować
 from world import World, LEVELS
 
 

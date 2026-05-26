@@ -2,8 +2,7 @@ import unittest
 import pygame
 import os
 from src.drone import Drone, Floor, Obstacle
-from src.shared import Vector2, ObjectType
-
+from src.shared import ObjectType
 
 class TestDroneLogic(unittest.TestCase):
     @classmethod
@@ -20,10 +19,11 @@ class TestDroneLogic(unittest.TestCase):
 
     def test_initialization(self):
         """Sprawdza czy dron inicjalizuje się z poprawnymi wartościami."""
-        self.assertEqual(self.drone.x, 100)
-        self.assertEqual(self.drone.y, 100)
-        self.assertEqual(self.drone.health, Drone.HEALTH)
-        self.assertEqual(self.drone.lives, Drone.LIVES)
+        # POPRAWKA: Testowanie pos.x i pos.y oraz max_health/max_lives
+        self.assertEqual(self.drone.pos.x, 100)
+        self.assertEqual(self.drone.pos.y, 100)
+        self.assertEqual(self.drone.health, self.drone.max_health)
+        self.assertEqual(self.drone.lives, self.drone.max_lives)
         self.assertFalse(self.drone.destroyed)
         self.assertEqual(self.drone.object_type, ObjectType.DRONE)
 
@@ -32,8 +32,9 @@ class TestDroneLogic(unittest.TestCase):
         self.drone.health = 0
         self.drone.health_check()
 
-        self.assertEqual(self.drone.lives, Drone.LIVES - 1)
-        self.assertEqual(self.drone.health, Drone.HEALTH)
+        # POPRAWKA: Użycie self.drone.max_lives zamiast Drone.LIVES
+        self.assertEqual(self.drone.lives, self.drone.max_lives - 1)
+        self.assertEqual(self.drone.health, self.drone.max_health)
         self.assertFalse(self.drone.destroyed)
 
     def test_drone_destruction(self):
